@@ -5,22 +5,15 @@ A personalized web application that recommends a daily song from Spotify based o
 ## Features
 
 - **Daily Song Recommendations**: Receive a new song recommendation each day based on your Spotify listening history
-- **Beautiful Reveal Animation**: Enjoy a delightful animation when revealing your daily song
 - **Song Details**: View comprehensive information about each recommended song including album, artist, and popularity
 - **History Calendar**: Browse your past recommendations in an intuitive calendar view
 - **Playlist Creation**: Create Spotify playlists from your monthly song recommendations with one click
-- **Responsive Design**: Enjoy a seamless experience on desktop, tablet, and mobile devices
-- **Spotify Integration**: Play songs directly on Spotify with a single click
 
 ## Technologies Used
 
 - **Next.js** - React framework for server-rendered applications
 - **NextAuth.js** - Authentication for Next.js applications
 - **Spotify Web API** - Access to Spotify's music data and user information
-- **CSS Modules** - Scoped styling for components
-- **Hugging Face API** (optional) - AI-powered song descriptions
-- **Vercel** (recommended) - Deployment platform
-
 ## Getting Started
 
 ### Prerequisites
