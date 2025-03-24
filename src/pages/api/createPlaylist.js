@@ -1,79 +1,93 @@
+import { getSession } from 'next-auth/react';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).end();
-  }
-
-  const { name, description, trackUris, accessToken } = req.body;
-
-  if (!name || !trackUris || !trackUris.length || !accessToken) {
-    return res.status(400).json({ error: 'Missing required parameters' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // 1. Get the current user's ID
+    // Get data from request
+    const { accessToken, name, description, songIds } = req.body;
+
+    if (!accessToken || !name || !songIds || songIds.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Step 1: Get the user's Spotify ID
     const userResponse = await fetch('https://api.spotify.com/v1/me', {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+        Authorization: `Bearer ${accessToken}`
+      }
     });
 
     if (!userResponse.ok) {
-      throw new Error('Failed to get user profile');
+      return res.status(userResponse.status).json({ 
+        error: 'Failed to fetch user data from Spotify' 
+      });
     }
 
     const userData = await userResponse.json();
     const userId = userData.id;
 
-    // 2. Create an empty playlist
-    const playlistResponse = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        description,
-        public: true,
-      }),
-    });
-
-    if (!playlistResponse.ok) {
-      throw new Error('Failed to create playlist');
-    }
-
-    const playlistData = await playlistResponse.json();
-    const playlistId = playlistData.id;
-    const playlistUrl = playlistData.external_urls.spotify;
-
-    // 3. Add tracks to the playlist (in batches of 100 if needed)
-    const batchSize = 100;
-    for (let i = 0; i < trackUris.length; i += batchSize) {
-      const batch = trackUris.slice(i, i + batchSize);
-      
-      const addTracksResponse = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+    // Step 2: Create a new playlist
+    const createPlaylistResponse = await fetch(
+      `https://api.spotify.com/v1/users/${userId}/playlists`, 
+      {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          uris: batch,
-        }),
+          name: name,
+          description: description,
+          public: false
+        })
+      }
+    );
+
+    if (!createPlaylistResponse.ok) {
+      return res.status(createPlaylistResponse.status).json({ 
+        error: 'Failed to create playlist on Spotify' 
       });
+    }
+
+    const playlistData = await createPlaylistResponse.json();
+    const playlistId = playlistData.id;
+
+    // Step 3: Add tracks to the playlist (100 tracks max per request)
+    for (let i = 0; i < songIds.length; i += 100) {
+      const batch = songIds.slice(i, i + 100);
+      const trackUris = batch.map(id => `spotify:track:${id}`);
+      
+      const addTracksResponse = await fetch(
+        `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            uris: trackUris
+          })
+        }
+      );
 
       if (!addTracksResponse.ok) {
-        throw new Error('Failed to add tracks to playlist');
+        return res.status(addTracksResponse.status).json({ 
+          error: 'Failed to add tracks to playlist' 
+        });
       }
     }
 
     return res.status(200).json({ 
-      success: true, 
-      playlistId, 
-      playlistUrl 
+      success: true,
+      playlistId: playlistId,
+      playlistUrl: playlistData.external_urls.spotify
     });
   } catch (error) {
     console.error('Error creating playlist:', error);
-    return res.status(500).json({ error: error.message || 'Failed to create playlist' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 } 

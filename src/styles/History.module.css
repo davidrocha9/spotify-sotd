@@ -52,12 +52,20 @@
 
 .calendarControls {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  justify-content: center;
-  gap: 1rem;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
   position: relative;
+  width: 100%;
+  }
+  
+  .monthSelector {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .monthYear {
@@ -90,23 +98,23 @@
 .createPlaylistButton {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.75rem;
   background-color: #1DB954;
   color: white;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  padding: 0.625rem 1.25rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
   border: none;
+    border-radius: 30px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+  font-size: 0.9375rem;
   cursor: pointer;
-  margin-left: auto;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
 }
 
 .createPlaylistButton:hover:not(:disabled) {
   background-color: #1ed760;
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(29, 185, 84, 0.3);
+  box-shadow: 0 8px 16px rgba(29, 185, 84, 0.4);
 }
 
 .createPlaylistButton:disabled {
@@ -120,7 +128,13 @@
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
-  animation: spinner 1s linear infinite;
+  animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
 }
 
 .calendar {
@@ -310,6 +324,21 @@
     font-size: 0.75rem;
     padding: 0.5rem;
   }
+        .calendarControls {
+          flex-direction: column;
+          gap: 1.5rem;
+          justify-content: center;
+        }
+    
+        .monthSelector {
+          position: static;
+          transform: none;
+          margin-bottom: 1rem;
+        }
+    
+        .createPlaylistButton {
+          width: 100%;
+        }
 }
 
 @media (max-width: 576px) {
@@ -331,4 +360,22 @@
     width: 100%;
     justify-content: center;
   }
-} 
+}
+/* Add styling for the current day */
+.currentDay {
+  background-color: rgba(29, 185, 84, 0.15) !important;
+  border: 1px solid #1DB954 !important;
+  position: relative;
+}
+
+.currentDay .dayNumber {
+  color: #1DB954 !important;
+  font-weight: 700 !important;
+}
+
+/* Add styles for the playlist button */
+.calendarActions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}

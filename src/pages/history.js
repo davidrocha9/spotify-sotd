@@ -57,6 +57,12 @@ export default function History() {
     const firstDay = getFirstDayOfMonth(selectedMonth, selectedYear)
     const days = []
     
+    // Get current date for comparison
+    const today = new Date()
+    const currentDay = today.getDate()
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
+    
     // Add empty cells for days before the first of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className={styles.emptyDay}></div>)
@@ -68,8 +74,13 @@ export default function History() {
       const dateKey = date.toISOString().split('T')[0]
       const song = songHistory[dateKey]
       
+      // Check if this is the current day
+      const isCurrentDay = day === currentDay && 
+                           selectedMonth === currentMonth && 
+                           selectedYear === currentYear
+      
       days.push(
-        <div key={day} className={styles.day}>
+        <div key={day} className={`${styles.day} ${isCurrentDay ? styles.currentDay : ''}`}>
           <div className={styles.dayNumber}>{day}</div>
           {song ? (
             <div className={styles.songThumbnail}>
@@ -122,52 +133,45 @@ export default function History() {
     try {
       setCreatingPlaylist(true);
       
-      // Get all songs from the selected month
-      const monthKey = `${selectedYear}-${selectedMonth + 1}`;
-      const monthSongs = songHistory[monthKey] || {};
-      
-      // Filter out days without songs and collect track URIs
-      const trackUris = Object.values(monthSongs)
+      // Collect all song IDs from the month
+      const songIds = Object.values(songHistory)
         .filter(song => song && song.id)
-        .map(song => `spotify:track:${song.id}`);
+        .map(song => song.id);
       
-      if (trackUris.length === 0) {
-        alert('No songs available for this month to create a playlist');
-        setCreatingPlaylist(false);
+      if (songIds.length === 0) {
+        alert("No songs available to create a playlist");
         return;
       }
       
       // Create the playlist
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                          'July', 'August', 'September', 'October', 'November', 'December'];
+      const playlistName = `${monthNames[selectedMonth]} ${selectedYear}`;
+      const playlistDescription = `Songs discovered through Spotify Song of the Day in ${monthNames[selectedMonth]} ${selectedYear}.`;
       
-      const playlistName = `Songs of ${monthNames[selectedMonth]} ${selectedYear}`;
-      const description = `My daily song recommendations from ${monthNames[selectedMonth]} ${selectedYear}`;
-      
+      // Call the API to create the playlist
       const response = await fetch('/api/createPlaylist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          accessToken: session.user.accessToken,
           name: playlistName,
-          description: description,
-          trackUris: trackUris,
-          accessToken: session.accessToken,
+          description: playlistDescription,
+          songIds: songIds,
         }),
       });
       
       const data = await response.json();
       
       if (response.ok && data.playlistUrl) {
-        // Redirect to the Spotify playlist
+        // Success! Open the playlist in a new tab
         window.open(data.playlistUrl, '_blank');
       } else {
         throw new Error(data.error || 'Failed to create playlist');
       }
     } catch (error) {
       console.error('Error creating playlist:', error);
-      alert('Failed to create the playlist. Please try again.');
+      alert(`Failed to create playlist: ${error.message}`);
     } finally {
       setCreatingPlaylist(false);
     }
@@ -192,23 +196,25 @@ export default function History() {
           </header>
           
           <div className={styles.calendarControls}>
-            <button 
-              className={styles.monthNavButton}
-              onClick={() => navigateMonth(-1)}
-            >
-              <i className="fas fa-chevron-left"></i>
-            </button>
-            
-            <h2 className={styles.monthYear}>
-              {monthNames[selectedMonth]} {selectedYear}
-            </h2>
-            
-            <button 
-              className={styles.monthNavButton}
-              onClick={() => navigateMonth(1)}
-            >
-              <i className="fas fa-chevron-right"></i>
-            </button>
+            <div className={styles.monthSelector}>
+              <button 
+                className={styles.monthNavButton}
+                onClick={() => navigateMonth(-1)}
+              >
+                <i className="fas fa-chevron-left"></i>
+              </button>
+              
+              <h2 className={styles.monthYear}>
+                {monthNames[selectedMonth]} {selectedYear}
+              </h2>
+              
+              <button 
+                className={styles.monthNavButton}
+                onClick={() => navigateMonth(1)}
+              >
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
             
             <button 
               className={styles.createPlaylistButton}
