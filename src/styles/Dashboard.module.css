@@ -274,53 +274,55 @@
 
 .songCard {
   display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 2.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: auto 1fr;
+    gap: 2rem;
+    align-items: stretch;
+    width: 100%;
 }
 
 .albumArtContainer {
+  max-width: 280px;
   width: 100%;
-    position: relative;
-}
-
-.albumImageWrapper {
-  position: relative;
-  width: 100%;
-    height: 0;
-    padding-bottom: 100%;
+  aspect-ratio: 1/1;
+    border-radius: 8px;
     overflow: hidden;
-  border-radius: 8px;
+  position: relative;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
+.albumImageWrapper {
+  width: 100%;
+    height: 100%;
+  position: relative;
+}
+
 .cover {
-  position: absolute !important;
-  top: 0;
-  left: 0;
   width: 100% !important;
-    height: 100% !important;
+  height: 100% !important;
     object-fit: cover;
+  border-radius: 8px;
 }
 
 .content {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  width: 100%;
+    height: 100%;
+    padding: 0.5rem 0;
 }
 
 .trackDetails {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .title {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
+  margin: 0 0 0.5rem;
   color: white;
-  margin: 0;
-  line-height: 1.2;
 }
 
 .artist {
@@ -332,8 +334,8 @@
 .metaInfo {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+  gap: 1rem;
+    margin-top: 1rem;
 }
 
 .metaItem {
@@ -408,6 +410,7 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   transition: all 0.5s ease;
   width: 100%;
+  position: relative;
 }
 
 .blurredCard:not(.revealed) {
@@ -415,12 +418,67 @@
   background-color: rgba(25, 25, 25, 0.9);
 }
 
+.blurredCard:not(.revealed) .songCard {
+  filter: blur(15px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.6;
+}
+
+.fullContent {
+  position: relative;
+  width: 100%;
+}
+
+.fullContent:not(.revealed) {
+  filter: blur(15px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.contentWrapper {
+  position: relative;
+  width: 100%;
+  background: rgba(30, 30, 30, 0.6);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.contentCard {
+  width: 100%;
+  transition: all 0.5s ease;
+}
+
+.contentCard:not(.revealed) {
+  filter: blur(15px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.songSection>.infoCard:has(.revealContainer) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 350px;
+}
+
+.revealCard {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  min-height: 350px !important;
+}
 .revealContainer {
-  padding: 4rem 2rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
+  height: 100%;
+    width: 100%;
 }
 
 .revealIcon {
@@ -479,17 +537,6 @@
 
 .revealed .songCard {
   animation: fadeIn 0.8s ease forwards;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .aiDescription {
@@ -578,9 +625,40 @@
 
 .infoCard {
   background: rgba(30, 30, 30, 0.6);
-  border-radius: 8px;
-  padding: 1.25rem;
-  height: 100%;
+  border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .infoCard>div:first-child {
+    margin-top: 0;
+  }
+  
+  .userStats,
+  .relatedSection,
+  .previewPlayer {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  .userStats:last-child,
+  .relatedSection:last-child,
+  .previewPlayer:last-child {
+    margin-bottom: 0;
+  }
+  
+  .userStats h3,
+  .relatedSection h3,
+  .previewPlayer h3 {
+    margin-top: 0;
+  }
+  
+  .infoCard>div {
+    padding-top: 0;
 }
 
 .songFeatures {
@@ -729,10 +807,6 @@
   font-size: 0.9rem;
 }
 
-.userStats {
-  margin-bottom: 1.5rem;
-}
-
 .relatedMusic {
   display: flex;
   flex-direction: column;
@@ -807,4 +881,12 @@
   color: rgba(255, 255, 255, 0.6);
   font-style: italic;
   font-size: 0.9rem;
+}
+
+.additionalContent .infoCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  text-align: left;
 } 

@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getSongOfTheDay, getRelatedContent, getUserSongStats } from '../utils/spotify'
 import { saveSongToHistory, checkTodaySong } from '../utils/songHistory'
 import Head from 'next/head'
@@ -70,40 +70,103 @@ export default function Dashboard() {
       setDataLoaded(true);
       
       if (session?.user?.id) {
+        console.log("Checking for existing song for user:", session.user.id)
         // Check if user already has a song for today
         const { exists } = await checkTodaySong(session.user.id);
         
+        console.log("Song exists for today:", exists)
         if (exists) {
           // If song already exists, mark it as revealed
           setRevealed(true);
         }
       }
       
-      // Always fetch the song of the day (either to show it directly or behind reveal button)
-      fetchSongOfTheDay();
+      // Always fetch the song of the day
+      await fetchSongOfTheDay();
     } catch (error) {
       console.error('Error checking for existing song:', error);
       fetchSongOfTheDay();
     }
   };
 
-  const fetchSongOfTheDay = async () => {
+  // Add a function to handle token refresh
+  const refreshAccessToken = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      console.log("Attempting to refresh access token...");
       
-      const song = await getSongOfTheDay(session.user.accessToken)
-      setSongOfTheDay(song)
+      // Use the built-in NextAuth refresh mechanism
+      const response = await fetch('/api/auth/session?update=true', { 
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to refresh token");
+      }
+      
+      // Get the updated session
+      const updatedSession = await response.json();
+      console.log("Token refreshed successfully");
+      
+      return updatedSession?.user?.accessToken;
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      return null;
+    }
+  };
+
+  // Update fetchSongOfTheDay to try token refresh
+  const fetchSongOfTheDay = useCallback(async (shouldRetry = true) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log("Fetching song of the day...");
+      const song = await getSongOfTheDay(session?.user?.accessToken);
+      
+      if (!song) {
+        console.error("No song returned from getSongOfTheDay");
+        
+        // Try refreshing token and retry if this is the first attempt
+        if (shouldRetry) {
+          console.log("Attempting to refresh token and retry...");
+          const newToken = await refreshAccessToken();
+          
+          if (newToken) {
+            console.log("Token refreshed, retrying API call");
+            // Need to reload the session to get the new token
+            router.push('/api/auth/session?update=true&redirect=/dashboard');
+            return;
+          }
+        }
+        
+        setError("Failed to fetch song recommendation. Please try again later.");
+        return;
+      }
+      
+      console.log("Song found:", song.name, "by", song.artists?.[0]?.name);
+      setSongOfTheDay(song);
       
       // Get similar artists and tracks based on the song and artist
       if (song?.id && song?.artists?.[0]?.id) {
+        console.log("Fetching related content for:", song.id, song.artists[0].id)
         const relatedContent = await getRelatedContent(
           session.user.accessToken, 
           song.id,
           song.artists[0].id
         );
-        setRelatedArtists(relatedContent.artists);
-        setRelatedTracks(relatedContent.tracks);
+        
+        console.log("Related content received:", 
+          relatedContent?.artists?.length || 0, "artists,", 
+          relatedContent?.tracks?.length || 0, "tracks"
+        )
+        
+        setRelatedArtists(relatedContent?.artists || []);
+        setRelatedTracks(relatedContent?.tracks || []);
+      } else {
+        console.warn("Missing song ID or artist ID for related content")
       }
       
       // Get user stats for this song
@@ -112,12 +175,26 @@ export default function Dashboard() {
         setUserStats(stats)
       }
     } catch (err) {
-      console.error('Error fetching song of the day:', err)
-      setError('Failed to fetch your song recommendation. Please try again later.')
+      console.error('Error fetching song of the day:', err);
+      
+      // Check if error is due to unauthorized (expired token)
+      if (err.response?.status === 401 && shouldRetry) {
+        console.log("Received 401 unauthorized, attempting token refresh...");
+        const newToken = await refreshAccessToken();
+        
+        if (newToken) {
+          console.log("Token refreshed, retrying API call");
+          // Reload the page to get the new token in the session
+          router.push('/api/auth/session?update=true&redirect=/dashboard');
+          return;
+        }
+      }
+      
+      setError('Failed to fetch your song recommendation. Please try again later.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, [session, router]);
 
   const revealSong = async () => {
     setRevealed(true)
@@ -169,6 +246,17 @@ export default function Dashboard() {
     return spotifyURI; // Prefer native app on all platforms
   };
 
+  // Add a useEffect to handle the revealed state
+  useEffect(() => {
+    console.log("Revealed state changed:", revealed);
+    
+    // If the song was revealed but we don't have data, try fetching again
+    if (revealed && !songOfTheDay && !loading && !error) {
+      console.log("Song was revealed but data is missing, fetching again")
+      fetchSongOfTheDay();
+    }
+  }, [revealed, songOfTheDay, loading, error, fetchSongOfTheDay]);
+
   if (status === 'loading') {
     return <div className={styles.loadingScreen}><div className={styles.loader}></div></div>
   }
@@ -209,8 +297,8 @@ export default function Dashboard() {
             </div>
           ) : songOfTheDay ? (
             <div className={styles.songSection}>
-              <div className={`${styles.blurredCard} ${revealed ? styles.revealed : ''}`}>
-                {!revealed ? (
+              {!revealed ? (
+                <div className={`${styles.infoCard} ${styles.revealCard}`}>
                   <div className={styles.revealContainer}>
                     <div className={styles.revealIcon}>
                       <i className="fas fa-gift"></i>
@@ -224,8 +312,10 @@ export default function Dashboard() {
                       Reveal Song
                     </button>
                   </div>
-                ) : (
-                  <>
+                </div>
+              ) : (
+                <>
+                  <div className={styles.infoCard}>
                     <div className={styles.songCard}>
                       <div className={styles.albumArtContainer}>
                         {songOfTheDay.album.images?.[0]?.url && (
@@ -291,141 +381,141 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    
-                    <div className={styles.additionalContent}>
-                      <div className={styles.infoCard}>
-                        <div className={styles.userStats}>
-                          <h3>Your Listening Stats</h3>
-                          <div className={styles.statsList}>
-                            {userStats ? (
-                              <>
-                                <div className={styles.statItem}>
-                                  <i className="fas fa-calendar-check"></i>
-                                  <span>Last played: {userStats.lastPlayed ? new Date(userStats.lastPlayed).toLocaleDateString() : 'Never played'}</span>
-                                </div>
-                                <div className={styles.statItem}>
-                                  <i className="fas fa-play-circle"></i>
-                                  <span>Played {userStats.playCount || 0} times in the last 30 days</span>
-                                </div>
-                                <div className={styles.statItem}>
-                                  <i className="fas fa-chart-line"></i>
-                                  <span>{userStats.playCount > 3 ? 'You love this track!' : userStats.playCount > 0 ? 'Getting familiar with this one' : 'New discovery for you'}</span>
-                                </div>
-                              </>
-                            ) : (
-                              <p className={styles.emptyStats}>We're tracking your listening habits to provide personalized insights.</p>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className={styles.shareSong}>
-                          <h3>Share This Discovery</h3>
-                          <div className={styles.shareButtons}>
-                            <button className={styles.shareButton} onClick={() => shareSong('twitter')}>
-                              <i className="fab fa-twitter"></i> Twitter
-                            </button>
-                            <button className={styles.copyButton} onClick={() => copyShareLink()}>
-                              <i className="fas fa-link"></i> Copy Link
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className={styles.feedbackSection}>
-                          <h3>Help Us Improve Your Recommendations</h3>
-                          <div className={styles.feedbackButtons}>
-                            <button className={styles.likeButton} onClick={() => submitFeedback('like')}>
-                              <i className="fas fa-thumbs-up"></i> Love It
-                            </button>
-                            <button className={styles.dislikeButton} onClick={() => submitFeedback('dislike')}>
-                              <i className="fas fa-thumbs-down"></i> Not For Me
-                            </button>
-                          </div>
+                  </div>
+                  
+                  <div className={styles.additionalContent}>
+                    <div className={styles.infoCard}>
+                      <div className={styles.userStats}>
+                        <h3>Your Listening Stats</h3>
+                        <div className={styles.statsList}>
+                          {userStats ? (
+                            <>
+                              <div className={styles.statItem}>
+                                <i className="fas fa-calendar-check"></i>
+                                <span>Last played: {userStats.lastPlayed ? new Date(userStats.lastPlayed).toLocaleDateString() : 'Never played'}</span>
+                              </div>
+                              <div className={styles.statItem}>
+                                <i className="fas fa-play-circle"></i>
+                                <span>Played {userStats.playCount || 0} times in the last 30 days</span>
+                              </div>
+                              <div className={styles.statItem}>
+                                <i className="fas fa-chart-line"></i>
+                                <span>{userStats.playCount > 3 ? 'You love this track!' : userStats.playCount > 0 ? 'Getting familiar with this one' : 'New discovery for you'}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <p className={styles.emptyStats}>We're tracking your listening habits to provide personalized insights.</p>
+                          )}
                         </div>
                       </div>
-
-                      <div className={styles.infoCard}>
-                        <div className={styles.relatedSection}>
-                          <h3>Similar Artists</h3>
-                          <div className={styles.artistsGrid}>
-                            {relatedArtists.length > 0 ? (
-                              relatedArtists.map(artist => (
-                                <a 
-                                  key={artist.id}
-                                  href={artist.external_urls?.spotify} 
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={styles.artistCard}
-                                >
-                                  {artist.images?.[0]?.url && (
-                                    <div className={styles.artistImage}>
-                                      <Image
-                                        src={artist.images[0].url}
-                                        alt={artist.name}
-                                        width={60}
-                                        height={60}
-                                      />
-                                    </div>
-                                  )}
-                                  <span>{artist.name}</span>
-                                </a>
-                              ))
-                            ) : (
-                              <p className={styles.emptyItems}>Looking for similar artists...</p>
-                            )}
-                          </div>
+                      
+                      <div className={styles.shareSong}>
+                        <h3>Share This Discovery</h3>
+                        <div className={styles.shareButtons}>
+                          <button className={styles.shareButton} onClick={() => shareSong('twitter')}>
+                            <i className="fab fa-twitter"></i> Twitter
+                          </button>
+                          <button className={styles.copyButton} onClick={() => copyShareLink()}>
+                            <i className="fas fa-link"></i> Copy Link
+                          </button>
                         </div>
                       </div>
-
-                      <div className={styles.infoCard}>
-                        <div className={styles.relatedSection}>
-                          <h3>Similar Tracks</h3>
-                          <div className={styles.tracksGrid}>
-                            {relatedTracks.length > 0 ? (
-                              relatedTracks.map(track => (
-                                <a 
-                                  key={track.id}
-                                  href={track.external_urls?.spotify} 
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={styles.trackCard}
-                                >
-                                  {track.album?.images?.[0]?.url && (
-                                    <div className={styles.trackImage}>
-                                      <Image
-                                        src={track.album.images[0].url}
-                                        alt={`${track.name} album art`}
-                                        width={50}
-                                        height={50}
-                                      />
-                                    </div>
-                                  )}
-                                  <div className={styles.trackInfo}>
-                                    <span className={styles.trackName}>{track.name}</span>
-                                    <span className={styles.trackArtist}>
-                                      {track.artists.map(a => a.name).join(', ')}
-                                    </span>
-                                  </div>
-                                </a>
-                              ))
-                            ) : (
-                              <p className={styles.emptyItems}>Looking for similar tracks...</p>
-                            )}
-                          </div>
+                      
+                      <div className={styles.feedbackSection}>
+                        <h3>Help Us Improve Your Recommendations</h3>
+                        <div className={styles.feedbackButtons}>
+                          <button className={styles.likeButton} onClick={() => submitFeedback('like')}>
+                            <i className="fas fa-thumbs-up"></i> Love It
+                          </button>
+                          <button className={styles.dislikeButton} onClick={() => submitFeedback('dislike')}>
+                            <i className="fas fa-thumbs-down"></i> Not For Me
+                          </button>
                         </div>
-                        
-                        {songOfTheDay.preview_url && (
-                          <div className={styles.previewPlayer}>
-                            <h3>Listen to Preview</h3>
-                            <audio controls src={songOfTheDay.preview_url} className={styles.audioPlayer}>
-                              Your browser does not support the audio element.
-                            </audio>
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </>
-                )}
-              </div>
+
+                    <div className={styles.infoCard}>
+                      <div className={styles.relatedSection}>
+                        <h3>Similar Artists</h3>
+                        <div className={styles.artistsGrid}>
+                          {relatedArtists.length > 0 ? (
+                            relatedArtists.map(artist => (
+                              <a 
+                                key={artist.id}
+                                href={artist.external_urls?.spotify} 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.artistCard}
+                              >
+                                {artist.images?.[0]?.url && (
+                                  <div className={styles.artistImage}>
+                                    <Image
+                                      src={artist.images[0].url}
+                                      alt={artist.name}
+                                      width={60}
+                                      height={60}
+                                    />
+                                  </div>
+                                )}
+                                <span>{artist.name}</span>
+                              </a>
+                            ))
+                          ) : (
+                            <p className={styles.emptyItems}>Looking for similar artists...</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.infoCard}>
+                      <div className={styles.relatedSection}>
+                        <h3>Similar Tracks</h3>
+                        <div className={styles.tracksGrid}>
+                          {relatedTracks.length > 0 ? (
+                            relatedTracks.map(track => (
+                              <a 
+                                key={track.id}
+                                href={track.external_urls?.spotify} 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.trackCard}
+                              >
+                                {track.album?.images?.[0]?.url && (
+                                  <div className={styles.trackImage}>
+                                    <Image
+                                      src={track.album.images[0].url}
+                                      alt={`${track.name} album art`}
+                                      width={50}
+                                      height={50}
+                                    />
+                                  </div>
+                                )}
+                                <div className={styles.trackInfo}>
+                                  <span className={styles.trackName}>{track.name}</span>
+                                  <span className={styles.trackArtist}>
+                                    {track.artists.map(a => a.name).join(', ')}
+                                  </span>
+                                </div>
+                              </a>
+                            ))
+                          ) : (
+                            <p className={styles.emptyItems}>Looking for similar tracks...</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {songOfTheDay.preview_url && (
+                        <div className={styles.previewPlayer}>
+                          <h3>Listen to Preview</h3>
+                          <audio controls src={songOfTheDay.preview_url} className={styles.audioPlayer}>
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className={styles.noSongContainer}>
@@ -434,6 +524,12 @@ export default function Dashboard() {
               </div>
               <h3>No recommendations available</h3>
               <p>We couldn't find a song recommendation based on your listening history. Try listening to more music on Spotify and check back later!</p>
+              <button 
+                className={styles.retryButton} 
+                onClick={() => fetchSongOfTheDay(true)}
+              >
+                Refresh Token & Try Again
+              </button>
             </div>
           )}
         </div>
