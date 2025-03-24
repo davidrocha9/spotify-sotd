@@ -9,12 +9,7 @@ export default function Home() {
   const { data: session, status } = useSession()
   const router = useRouter()
   
-  // If logged in, redirect to dashboard
-  if (status === 'authenticated') {
-    router.push('/dashboard')
-    return null
-  }
-
+  // Define albums array outside the component or memoize it
   const famousAlbums = [
     { 
       url: "https://i.scdn.co/image/ab67616d0000b27349d694203245f241a1bcaa72", 
@@ -40,36 +35,47 @@ export default function Home() {
       url: "https://i.scdn.co/image/ab67616d0000b273124e9249fada4ff3c3a0739c", 
       name: "Like Him (feat. Lola Young)", 
       artist: "Tyler, The Creator, Lola Young" 
-    },
+    }
   ];
 
+  // ALWAYS declare all hooks, regardless of conditions
   const [currentAlbum, setCurrentAlbum] = useState(famousAlbums[0]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Handle album rotation effect
   useEffect(() => {
+    // Skip the effect if user is authenticated
+    if (status === 'authenticated') return;
+    
     const interval = setInterval(() => {
-      // Start transition
       setIsTransitioning(true);
       
-      // Allow more time for fade out (800ms instead of 500ms)
       setTimeout(() => {
-        // Find the next album
         const nextIndex = (famousAlbums.findIndex(album => 
           album.name === currentAlbum.name) + 1) % famousAlbums.length;
         
-        // Set the entire album object at once
         setCurrentAlbum(famousAlbums[nextIndex]);
         
-        // Small delay before starting fade in for smoother transition
         setTimeout(() => {
-          // End transition (fade back in)
           setIsTransitioning(false);
         }, 50);
       }, 800);
-    }, 4000); // Longer display time (4 seconds instead of 3)
+    }, 4000);
     
     return () => clearInterval(interval);
-  }, [currentAlbum]);
+  }, [currentAlbum, status]);
+  
+  // Handle redirect after hooks have been called
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
+
+  // User is authenticated, but we've already called all hooks
+  if (status === 'authenticated') {
+    return null; // Safe to return null now since all hooks have been called
+  }
 
   return (
     <>

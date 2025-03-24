@@ -9,7 +9,9 @@ const nextConfig = {
       'storage.googleapis.com',
       'images.unsplash.com',
       'www.spotify.com',
-      'picsum.photos'
+      'picsum.photos',
+      'upload.wikimedia.org',
+      'images.genius.com'
     ],
   },
   env: {
