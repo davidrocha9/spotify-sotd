@@ -1,0 +1,293 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.main {
+  padding: 4rem 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem var(--container-padding) 6rem;
+  gap: 4rem;
+  overflow: hidden;
+  max-width: var(--container-width);
+}
+
+.gradientOrb {
+  position: absolute;
+  width: 30vw;
+  height: 30vw;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(29, 185, 84, 0.3), transparent 70%);
+  top: 10%;
+  right: 0;
+  z-index: -1;
+  filter: blur(60px);
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-5%, 5%); }
+}
+
+@media (min-width: 768px) {
+  .hero {
+    flex-direction: row;
+    text-align: left;
+    padding: 2rem var(--container-padding) 8rem;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .content {
+    align-items: flex-start;
+    text-align: left;
+    margin-left: 2rem;
+  }
+}
+
+.title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+  font-weight: 800;
+  margin: 0 0 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.title span {
+  background: linear-gradient(90deg, #1DB954, #4B917D);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.description {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2.5rem;
+  font-weight: 400;
+  max-width: 90%;
+}
+
+.loginButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #1DB954;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  border: none;
+  transition: all 0.3s ease;
+  letter-spacing: 0.01em;
+}
+
+.loginButton i {
+  font-size: 1.25rem;
+}
+
+.loginButton:hover {
+  background-color: #1ed760;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(29, 185, 84, 0.3);
+}
+
+.loginButton:active {
+  transform: translateY(0);
+}
+
+.visual {
+  min-width: 25vw;
+  max-width: 100%;
+  margin-top: 1rem;
+  position: relative;
+}
+
+.musicControls {
+  background-color: rgba(30, 30, 30, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 550px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  transform: perspective(1000px) rotateX(0) rotateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.musicControls:hover {
+  transform: perspective(1000px) rotateX(-5deg) rotateY(5deg);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.albumCover {
+  background: linear-gradient(145deg, #1DB954, #4B917D);
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.playerControls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.trackInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.trackName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.artistName {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.25rem;
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  width: 35%;
+  background-color: #1DB954;
+  border-radius: 2px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.controls i {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.controls i:hover {
+  color: #1DB954;
+  transform: scale(1.1);
+}
+
+.controls i.fa-play-circle {
+  font-size: 2.4rem;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 2rem var(--container-padding) 5rem;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(30, 30, 30, 0.6);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  background-color: rgba(40, 40, 40, 0.6);
+}
+
+.featureIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #1DB954;
+  color: white;
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.feature h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: white;
+}
+
+.feature p {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.footer {
+  width: 100%;
+  height: 100px;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: auto;
+} 
