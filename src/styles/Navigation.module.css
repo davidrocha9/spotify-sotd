@@ -1,0 +1,33 @@
+/* Add styling for the sign out button */
+.signOutButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.signOutButton i {
+    color: #e74c3c;
+    /* Red color for the icon */
+    font-size: 1rem;
+}
+
+.signOutButton:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+    /* Light red background on hover */
+    border-color: rgba(231, 76, 60, 0.3);
+    color: white;
+}
+
+.signOutButton:hover i {
+    transform: translateX(2px);
+    /* Small animation effect */
+}

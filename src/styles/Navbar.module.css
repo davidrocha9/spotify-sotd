@@ -74,19 +74,33 @@
 }
 
 .signOutButton {
-  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  background: transparent;
-  padding: 0.5rem 0;
-  border-radius: 4px;
+  cursor: pointer;
   transition: all 0.2s ease;
-  border-bottom: 1px solid transparent;
+}
+
+.signOutButton i {
+  color: #e74c3c;
+  font-size: 1rem;
 }
 
 .signOutButton:hover {
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.3);
+    color: white;
+  }
+  
+  .signOutButton:hover i {
+    transform: translateX(2px);
 }
 
 .navLinks {

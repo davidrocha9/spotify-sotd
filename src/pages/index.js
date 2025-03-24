@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import { useState, useEffect } from 'react'
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -13,6 +14,62 @@ export default function Home() {
     router.push('/dashboard')
     return null
   }
+
+  const famousAlbums = [
+    { 
+      url: "https://i.scdn.co/image/ab67616d0000b27349d694203245f241a1bcaa72", 
+      name: "Andrea", 
+      artist: "Bad Bunny, Buscabulla" 
+    },
+    { 
+      url: "https://i.scdn.co/image/ab67616d0000b273cdb645498cd3d8a2db4d05e1", 
+      name: "To Pimp a Butterfly", 
+      artist: "Kendrick Lamar" 
+    },
+    { 
+      url: "https://i.scdn.co/image/ab67616d0000b273aacc3ddf3bfa01f4bd44cacc", 
+      name: "Show Me", 
+      artist: "Joey Bada$$" 
+    },
+    { 
+      url: "https://i.scdn.co/image/ab67616d0000b27325b055377757b3cdd6f26b78", 
+      name: "All Falls Down", 
+      artist: "Kanye West, Syleena Johnson" 
+    },
+    { 
+      url: "https://i.scdn.co/image/ab67616d0000b273124e9249fada4ff3c3a0739c", 
+      name: "Like Him (feat. Lola Young)", 
+      artist: "Tyler, The Creator, Lola Young" 
+    },
+  ];
+
+  const [currentAlbum, setCurrentAlbum] = useState(famousAlbums[0]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Start transition
+      setIsTransitioning(true);
+      
+      // Allow more time for fade out (800ms instead of 500ms)
+      setTimeout(() => {
+        // Find the next album
+        const nextIndex = (famousAlbums.findIndex(album => 
+          album.name === currentAlbum.name) + 1) % famousAlbums.length;
+        
+        // Set the entire album object at once
+        setCurrentAlbum(famousAlbums[nextIndex]);
+        
+        // Small delay before starting fade in for smoother transition
+        setTimeout(() => {
+          // End transition (fade back in)
+          setIsTransitioning(false);
+        }, 50);
+      }, 800);
+    }, 4000); // Longer display time (4 seconds instead of 3)
+    
+    return () => clearInterval(interval);
+  }, [currentAlbum]);
 
   return (
     <>
@@ -44,13 +101,20 @@ export default function Home() {
         
         <div className={styles.visual}>
           <div className={styles.musicControls}>
-            <div className={styles.albumCover}>
-              <i className="fas fa-music"></i>
+            <div className={`${styles.albumCover} ${isTransitioning ? styles.fadeOut : styles.fadeIn}`}>
+              <Image 
+                src={currentAlbum.url}
+                alt={`${currentAlbum.name} by ${currentAlbum.artist}`}
+                width={550}
+                height={550}
+                className={styles.albumImage}
+              />
             </div>
-            <div className={styles.playerControls}>
+            
+            <div className={`${styles.playerControls} ${isTransitioning ? styles.fadeOut : styles.fadeIn}`}>
               <div className={styles.trackInfo}>
-                <span className={styles.trackName}>Your Song of the Day</span>
-                <span className={styles.artistName}>Personalized for You</span>
+                <span className={styles.trackName}>{currentAlbum.name}</span>
+                <span className={styles.artistName}>{currentAlbum.artist}</span>
               </div>
               <div className={styles.progressBar}>
                 <div className={styles.progress}></div>

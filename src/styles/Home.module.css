@@ -155,16 +155,32 @@
 }
 
 .albumCover {
-  background: linear-gradient(145deg, #1DB954, #4B917D);
   width: 100%;
   aspect-ratio: 1;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  }
+  
+  .albumCover:hover {
+    transform: scale(1.02);
+  }
+  
+  .albumImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .fadeIn {
+    opacity: 1;
+    transition: opacity 0.8s ease-in;
+  }
+  
+  .fadeOut {
+    opacity: 0;
+    transition: opacity 0.8s ease-out;
 }
 
 .playerControls {
@@ -173,6 +189,22 @@
   gap: 1rem;
 }
 
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #1DB954, #1ed760);
+  border-radius: 2px;
+  animation: progressAnimation 4.75s linear infinite;
+}
+
+@keyframes progressAnimation {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
 .trackInfo {
   display: flex;
   flex-direction: column;
@@ -197,13 +229,6 @@
   border-radius: 2px;
   margin: 0.5rem 0;
   overflow: hidden;
-}
-
-.progress {
-  height: 100%;
-  width: 35%;
-  background-color: #1DB954;
-  border-radius: 2px;
 }
 
 .controls {
