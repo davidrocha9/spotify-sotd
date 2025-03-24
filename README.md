@@ -14,6 +14,8 @@ A personalized web application that recommends a daily song from Spotify based o
 - **Next.js** - React framework for server-rendered applications
 - **NextAuth.js** - Authentication for Next.js applications
 - **Spotify Web API** - Access to Spotify's music data and user information
+- **Supabase** - PostgreSQL database for storing user song history
+
 ## Getting Started
 
 ### Prerequisites
@@ -50,6 +52,8 @@ A personalized web application that recommends a daily song from Spotify based o
    SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
    NEXTAUTH_SECRET=generate_a_random_string_here
    HUGGINGFACE_API_KEY=your_huggingface_api_key_if_using
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
 4. Start the development server:
@@ -85,6 +89,8 @@ When deploying to production, make sure to:
 - `SPOTIFY_CLIENT_SECRET`: Your Spotify application Client Secret
 - `NEXTAUTH_SECRET`: A random string used to encrypt cookies (generate with `openssl rand -base64 32`)
 - `HUGGINGFACE_API_KEY`: Your Hugging Face API key (optional, for AI descriptions)
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
 
 ## Contributing
 

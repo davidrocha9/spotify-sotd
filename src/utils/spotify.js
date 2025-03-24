@@ -52,8 +52,23 @@ export const getRecommendations = async (accessToken, seedTrackIds, limit = 1) =
   }
 }
 
+// Add to your spotify.js file
+export const getTrackFeatures = async (accessToken, trackId) => {
+  try {
+    const response = await axios.get(`https://api.spotify.com/v1/audio-features/${trackId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching track features:', error);
+    return {};
+  }
+};
+
 // Improved function to analyze and determine song of the day
-export const getSongOfTheDay = async (accessToken) => {
+export async function getSongOfTheDay(accessToken) {
   try {
     // Get user's recent and top tracks
     const recentTracks = await getRecentlyPlayed(accessToken)
@@ -140,7 +155,209 @@ export const getSongOfTheDay = async (accessToken) => {
     
     return songOfTheDay
   } catch (error) {
-    console.error('Error determining song of the day:', error)
-    return null
+    console.error('Error in getSongOfTheDay:', error)
+    throw error // Re-throw to be handled by the component
   }
-} 
+}
+
+// Update getRelatedContent to return both similar artists and tracks
+export const getRelatedContent = async (accessToken, trackId, artistId) => {
+  try {
+    // Get artist details to extract genres
+    const artistResponse = await axios.get(
+      `https://api.spotify.com/v1/artists/${artistId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+    
+    const mainArtist = artistResponse.data;
+    const genres = mainArtist.genres || [];
+    
+    // SIMILAR ARTISTS COLLECTION
+    
+    // Approach 1: Get main artist's albums to find collaborating artists
+    const albumsResponse = await axios.get(
+      `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=10`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+    
+    // Approach 2: Get search results for similar artists by genre
+    let searchQuery = '';
+    if (genres.length > 0) {
+      // Use the first genre as a search term
+      searchQuery = `genre:"${genres[0]}"`;
+    } else {
+      // If no genres, search by artist name "similar to"
+      searchQuery = `similar to ${mainArtist.name}`;
+    }
+    
+    const searchResponse = await axios.get(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=artist&limit=15`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+    
+    // SIMILAR TRACKS COLLECTION
+    
+    // Get similar tracks using search
+    let trackSearchQuery = '';
+    if (genres.length > 0) {
+      trackSearchQuery = `genre:"${genres[0]}" NOT artist:"${mainArtist.name}"`;
+    } else {
+      trackSearchQuery = `similar to ${mainArtist.name}`;
+    }
+    
+    const trackSearchResponse = await axios.get(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(trackSearchQuery)}&type=track&limit=10`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+    
+    // Combine results from different approaches
+    const uniqueArtists = [];
+    const uniqueTracks = [];
+    const seenArtistIds = new Set([artistId]); // Skip the original artist
+    const seenTrackIds = new Set([trackId]); // Skip the original track
+    
+    // Process search results for artists (higher quality matches)
+    if (searchResponse.data.artists && searchResponse.data.artists.items) {
+      searchResponse.data.artists.items.forEach(artist => {
+        if (!seenArtistIds.has(artist.id) && artist.images && artist.images.length > 0) {
+          seenArtistIds.add(artist.id);
+          uniqueArtists.push(artist);
+        }
+      });
+    }
+    
+    // Process search results for tracks
+    if (trackSearchResponse.data.tracks && trackSearchResponse.data.tracks.items) {
+      trackSearchResponse.data.tracks.items.forEach(track => {
+        if (!seenTrackIds.has(track.id) && track.album?.images?.length > 0) {
+          seenTrackIds.add(track.id);
+          uniqueTracks.push(track);
+        }
+      });
+    }
+    
+    // Process albums to find collaborating artists
+    if (albumsResponse.data.items) {
+      // Fetch full details for each album to get all artists
+      const albumPromises = albumsResponse.data.items.slice(0, 5).map(album => 
+        axios.get(`https://api.spotify.com/v1/albums/${album.id}`, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        })
+      );
+      
+      const albumDetails = await Promise.all(albumPromises);
+      
+      // Extract artists from each album's tracks
+      albumDetails.forEach(response => {
+        const album = response.data;
+        if (album.tracks && album.tracks.items) {
+          album.tracks.items.forEach(track => {
+            // Add track to uniqueTracks if not already included
+            if (!seenTrackIds.has(track.id)) {
+              // Need to add album info manually since album tracks don't include it
+              track.album = {
+                id: album.id,
+                name: album.name,
+                images: album.images
+              };
+              uniqueTracks.push(track);
+              seenTrackIds.add(track.id);
+            }
+            
+            // Add artists
+            track.artists.forEach(artist => {
+              if (!seenArtistIds.has(artist.id)) {
+                // Need to fetch full artist details
+                fetchArtistDetails(accessToken, artist.id)
+                  .then(artistDetails => {
+                    if (artistDetails && artistDetails.images && artistDetails.images.length > 0) {
+                      uniqueArtists.push(artistDetails);
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('artistDetailsLoaded'));
+                      }
+                    }
+                  })
+                  .catch(err => console.error(`Error fetching artist details: ${err}`));
+                seenArtistIds.add(artist.id);
+              }
+            });
+          });
+        }
+      });
+    }
+    
+    console.log(`Found ${uniqueArtists.length} related artists and ${uniqueTracks.length} related tracks`);
+    return {
+      artists: uniqueArtists.slice(0, 6), // Limit to 6 artists
+      tracks: uniqueTracks.slice(0, 6)    // Limit to 6 tracks
+    };
+  } catch (error) {
+    console.error('Error fetching related content:', error);
+    return { artists: [], tracks: [] };
+  }
+};
+
+// Helper function to get full artist details including images
+const fetchArtistDetails = async (accessToken, artistId) => {
+  try {
+    const response = await axios.get(
+      `https://api.spotify.com/v1/artists/${artistId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching artist details for ${artistId}:`, error);
+    return null;
+  }
+};
+
+// Get user stats for a specific song
+export const getUserSongStats = async (accessToken, trackId) => {
+  try {
+    // Get recently played tracks to analyze
+    const recentTracks = await getRecentlyPlayed(accessToken, 50);
+    
+    let playCount = 0;
+    let lastPlayed = null;
+    
+    // Count occurrences of this track and find the most recent play
+    recentTracks.forEach(item => {
+      if (item.track.id === trackId) {
+        playCount++;
+        
+        const playedAt = new Date(item.played_at);
+        if (!lastPlayed || playedAt > lastPlayed) {
+          lastPlayed = playedAt;
+        }
+      }
+    });
+    
+    return {
+      playCount,
+      lastPlayed: lastPlayed ? lastPlayed.toISOString() : null
+    };
+  } catch (error) {
+    console.error('Error fetching user song stats:', error);
+    return { playCount: 0, lastPlayed: null };
+  }
+}; 

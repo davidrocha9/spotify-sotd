@@ -1,6 +1,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import { getSongHistory } from '../utils/songHistory'
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/History.module.css'
@@ -19,50 +20,28 @@ export default function History() {
       router.push('/')
     }
     
-    if (session?.accessToken) {
+    if (session?.user?.id) {
       fetchSongHistory()
     }
-  }, [session, status, router])
+  }, [session, status, router, selectedMonth, selectedYear])
   
   const fetchSongHistory = async () => {
     try {
       setLoading(true)
       
-      // This would be replaced with a real API call to get song history
-      // For now, we'll use mock data
-      const mockHistory = generateMockSongHistory()
-      setSongHistory(mockHistory)
+      // Get real song history from Supabase
+      const history = await getSongHistory(
+        session.user.id, 
+        selectedMonth, 
+        selectedYear
+      )
+      
+      setSongHistory(history)
     } catch (error) {
       console.error('Error fetching song history:', error)
     } finally {
       setLoading(false)
     }
-  }
-  
-  // Mock data generator for demonstration purposes
-  const generateMockSongHistory = () => {
-    const history = {}
-    const today = new Date()
-    
-    // Generate songs for the last 90 days
-    for (let i = 0; i < 90; i++) {
-      const date = new Date()
-      date.setDate(today.getDate() - i)
-      const dateKey = date.toISOString().split('T')[0]
-      
-      // Random album covers and song data
-      const albumIdx = Math.floor(Math.random() * 20) + 1
-      history[dateKey] = {
-        name: `Song ${i+1}`,
-        artists: [{ name: `Artist ${Math.floor(Math.random() * 10) + 1}` }],
-        album: {
-          name: `Album ${Math.floor(Math.random() * 15) + 1}`,
-          images: [{ url: `https://picsum.photos/seed/${albumIdx}/300/300` }]
-        }
-      }
-    }
-    
-    return history
   }
   
   const getDaysInMonth = (month, year) => {

@@ -125,10 +125,9 @@
 }
 
 .songSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3rem;
+  width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .refreshButton {
@@ -274,82 +273,40 @@
 }
 
 .songCard {
-  display: flex;
-  flex-direction: column;
-  padding: 2rem;
-  opacity: 0;
-}
-
-@media (min-width: 768px) {
-  .songCard {
-    flex-direction: row;
-    align-items: flex-start;
+  display: grid;
+    grid-template-columns: 280px 1fr;
     gap: 2.5rem;
-  }
-}
-
-.albumArtContainer {
-  flex-shrink: 0;
   margin-bottom: 2rem;
 }
 
-@media (min-width: 768px) {
-  .albumArtContainer {
-    margin-bottom: 0;
-  }
+.albumArtContainer {
+  width: 100%;
+    position: relative;
 }
 
 .albumImageWrapper {
   position: relative;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
-  transition: transform 0.3s ease;
-}
-
-.albumImageWrapper:hover {
-  transform: scale(1.02);
+    height: 0;
+    padding-bottom: 100%;
+    overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .cover {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-
-.playOverlay {
-  position: absolute;
+  position: absolute !important;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  cursor: pointer;
-}
-
-.playOverlay i {
-  font-size: 3rem;
-  color: white;
-}
-
-.albumImageWrapper:hover .playOverlay {
-  opacity: 1;
+  width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
 }
 
 .content {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  justify-content: space-between;
 }
 
 .trackDetails {
@@ -444,16 +401,13 @@
 }
 
 .blurredCard {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  background-color: rgba(18, 18, 18, 0.7);
+  background: rgba(25, 25, 25, 0.8);
+    border-radius: 12px;
   backdrop-filter: blur(10px);
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  overflow: hidden;
+  padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   transition: all 0.5s ease;
+  width: 100%;
 }
 
 .blurredCard:not(.revealed) {
@@ -578,4 +532,279 @@
   color: rgba(255, 255, 255, 0.8);
   margin: 0;
   font-style: italic;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.featureItem {
+  position: relative;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.featureMeter {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--spotify-green) 0%, var(--spotify-green-hover) 100%);
+  border-radius: 12px;
+  opacity: 0.7;
+}
+
+.featureItem span {
+  position: relative;
+  z-index: 2;
+  color: white;
+  font-size: 0.875rem;
+}
+
+.additionalContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.infoCard {
+  background: rgba(30, 30, 30, 0.6);
+  border-radius: 8px;
+  padding: 1.25rem;
+  height: 100%;
+}
+
+.songFeatures {
+  grid-column: span 1;
+}
+
+.songFeatures h3,
+.recommendationReason h3,
+.previewPlayer h3,
+.relatedArtists h3,
+.feedbackSection h3,
+.shareSong h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.feedbackButtons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.likeButton,
+.dislikeButton,
+.shareButton,
+.copyButton {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.likeButton {
+  background: #1DB954;
+  color: white;
+}
+
+.dislikeButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.shareButton,
+.copyButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.likeButton:hover,
+.shareButton:hover,
+.copyButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.dislikeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.artistsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.artistCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+  transition: transform 0.2s ease;
+}
+
+.artistCard:hover {
+  transform: translateY(-5px);
+}
+
+.artistImage {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.artistCard span {
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.audioPlayer {
+  width: 100%;
+  height: 36px;
+  border-radius: 18px;
+}
+
+@media (max-width: 768px) {
+  .songCard {
+    grid-template-columns: 1fr;
+  }
+
+  .albumArtContainer {
+    max-width: 250px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .additionalContent {
+    grid-template-columns: 1fr;
+  }
+}
+
+.statsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.statItem i {
+  color: #1DB954;
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.emptyStats,
+.emptyArtists {
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.userStats {
+  margin-bottom: 1.5rem;
+}
+
+.relatedMusic {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.relatedSection {
+  margin-bottom: 0.5rem;
+}
+
+.relatedSection h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.tracksGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.trackCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: white;
+}
+
+.trackCard:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.trackImage {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.trackInfo {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.trackName {
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackArtist {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emptyItems {
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  font-size: 0.9rem;
 } 
