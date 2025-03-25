@@ -63,29 +63,67 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Helper function to check if user already has revealed a song today
+  // Update the checkForExistingSong function to properly handle existing songs
   const checkForExistingSong = async () => {
     try {
       // Set this flag to prevent reloading when switching tabs
       setDataLoaded(true);
+      setLoading(true);
       
       if (session?.user?.id) {
         console.log("Checking for existing song for user:", session.user.id)
         // Check if user already has a song for today
-        const { exists } = await checkTodaySong(session.user.id);
+        const { exists, song } = await checkTodaySong(session.user.id);
         
         console.log("Song exists for today:", exists)
-        if (exists) {
-          // If song already exists, mark it as revealed
+        if (exists && song) {
+          // If song already exists, use it and mark it as revealed
+          setSongOfTheDay(song);
           setRevealed(true);
+          setLoading(false);
+          
+          // Also fetch related content and stats for the existing song
+          fetchRelatedContentAndStats(song);
+          return;
         }
       }
       
-      // Always fetch the song of the day
+      // Only fetch a new song if we didn't find one in the database
       await fetchSongOfTheDay();
     } catch (error) {
       console.error('Error checking for existing song:', error);
-      fetchSongOfTheDay();
+      await fetchSongOfTheDay();
+    }
+  };
+
+  // Extract the related content and stats fetching to a separate function
+  const fetchRelatedContentAndStats = async (song) => {
+    try {
+      // Get similar artists and tracks based on the song and artist
+      if (song?.id && song?.artists?.[0]?.id) {
+        console.log("Fetching related content for:", song.id, song.artists[0].id)
+        const relatedContent = await getRelatedContent(
+          session.user.accessToken, 
+          song.id,
+          song.artists[0].id
+        );
+        
+        console.log("Related content received:", 
+          relatedContent?.artists?.length || 0, "artists,", 
+          relatedContent?.tracks?.length || 0, "tracks"
+        )
+        
+        setRelatedArtists(relatedContent?.artists || []);
+        setRelatedTracks(relatedContent?.tracks || []);
+      }
+      
+      // Get user stats for this song
+      if (song?.id) {
+        const stats = await getUserSongStats(session.user.accessToken, song.id)
+        setUserStats(stats)
+      }
+    } catch (error) {
+      console.error('Error fetching related content:', error);
     }
   };
 
@@ -117,7 +155,7 @@ export default function Dashboard() {
     }
   };
 
-  // Update fetchSongOfTheDay to try token refresh
+  // Simplify the fetchSongOfTheDay function to avoid duplicate logic
   const fetchSongOfTheDay = useCallback(async (shouldRetry = true) => {
     try {
       setLoading(true);
@@ -143,37 +181,17 @@ export default function Dashboard() {
         }
         
         setError("Failed to fetch song recommendation. Please try again later.");
+        setLoading(false);
         return;
       }
       
       console.log("Song found:", song.name, "by", song.artists?.[0]?.name);
       setSongOfTheDay(song);
       
-      // Get similar artists and tracks based on the song and artist
-      if (song?.id && song?.artists?.[0]?.id) {
-        console.log("Fetching related content for:", song.id, song.artists[0].id)
-        const relatedContent = await getRelatedContent(
-          session.user.accessToken, 
-          song.id,
-          song.artists[0].id
-        );
-        
-        console.log("Related content received:", 
-          relatedContent?.artists?.length || 0, "artists,", 
-          relatedContent?.tracks?.length || 0, "tracks"
-        )
-        
-        setRelatedArtists(relatedContent?.artists || []);
-        setRelatedTracks(relatedContent?.tracks || []);
-      } else {
-        console.warn("Missing song ID or artist ID for related content")
-      }
+      // Use the extracted helper function
+      await fetchRelatedContentAndStats(song);
       
-      // Get user stats for this song
-      if (song?.id) {
-        const stats = await getUserSongStats(session.user.accessToken, song.id)
-        setUserStats(stats)
-      }
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching song of the day:', err);
       
@@ -191,7 +209,6 @@ export default function Dashboard() {
       }
       
       setError('Failed to fetch your song recommendation. Please try again later.');
-    } finally {
       setLoading(false);
     }
   }, [session, router]);
