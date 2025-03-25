@@ -5,6 +5,8 @@ import { getSongHistory } from '../utils/songHistory'
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/History.module.css'
+import { createPlaylist } from '../utils/spotify'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns'
 
 export default function History() {
   const { data: session, status } = useSession()
@@ -14,6 +16,7 @@ export default function History() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [creatingPlaylist, setCreatingPlaylist] = useState(false)
+  const [currentDate, setCurrentDate] = useState(new Date())
   
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -177,6 +180,22 @@ export default function History() {
     }
   };
   
+  const prevMonth = () => {
+    navigateMonth(-1)
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), 1))
+  }
+  
+  const nextMonth = () => {
+    navigateMonth(1)
+    setCurrentDate(next => new Date(next.getFullYear(), next.getMonth(), 1))
+  }
+  
+  const handleCreatePlaylist = async () => {
+    await createMonthlyPlaylist()
+  }
+  
+  const hasSongsInMonth = Object.keys(songHistory).length > 0
+  
   if (status === 'loading') {
     return <div className={styles.loadingScreen}><div className={styles.loader}></div></div>
   }
@@ -190,71 +209,66 @@ export default function History() {
       
       <div className={styles.gradientBg}>
         <div className={styles.container}>
-          <header className={styles.header}>
-            <h1 className={styles.heading}>Your Song History</h1>
-            <p className={styles.subheading}>A calendar view of your personalized daily tracks</p>
-          </header>
-          
-          <div className={styles.calendarControls}>
-            <div className={styles.monthSelector}>
-              <button 
-                className={styles.monthNavButton}
-                onClick={() => navigateMonth(-1)}
-              >
-                <i className="fas fa-chevron-left"></i>
-              </button>
-              
-              <h2 className={styles.monthYear}>
-                {monthNames[selectedMonth]} {selectedYear}
-              </h2>
-              
-              <button 
-                className={styles.monthNavButton}
-                onClick={() => navigateMonth(1)}
-              >
-                <i className="fas fa-chevron-right"></i>
-              </button>
-            </div>
-            
-            <button 
-              className={styles.createPlaylistButton}
-              onClick={createMonthlyPlaylist}
-              disabled={creatingPlaylist}
-            >
-              {creatingPlaylist ? (
-                <>
-                  <div className={styles.smallLoader}></div>
-                  <span>Creating...</span>
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-music"></i>
-                  <span>Create Spotify Playlist</span>
-                </>
-              )}
-            </button>
+          <div className={styles.header}>
+            <h1 className={styles.heading}>Your Listening History</h1>
+            <p className={styles.subheading}>Track your daily song picks and create monthly playlists</p>
           </div>
-          
-          <div className={styles.calendar}>
-            <div className={styles.weekdayHeader}>
-              <div>Sun</div>
-              <div>Mon</div>
-              <div>Tue</div>
-              <div>Wed</div>
-              <div>Thu</div>
-              <div>Fri</div>
-              <div>Sat</div>
+
+          <div className={styles.calendarSection}>
+            <div className={styles.calendarControls}>
+              <div className={styles.monthSelector}>
+                <button 
+                  className={styles.monthNavButton}
+                  onClick={prevMonth}
+                  aria-label="Previous month"
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                <h2 className={styles.monthYear}>
+                  {format(currentDate, 'MMMM yyyy')}
+                </h2>
+                <button 
+                  className={styles.monthNavButton}
+                  onClick={nextMonth}
+                  aria-label="Next month"
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
+              <button 
+                className={styles.createPlaylistButton}
+                onClick={handleCreatePlaylist}
+                disabled={creatingPlaylist || !hasSongsInMonth}
+              >
+                {creatingPlaylist ? (
+                  <div className={styles.smallLoader}></div>
+                ) : (
+                  <>
+                    <i className="fas fa-plus"></i>
+                    Create Monthly Playlist
+                  </>
+                )}
+              </button>
             </div>
-            
-            <div className={styles.daysGrid}>
-              {loading ? (
-                <div className={styles.calendarLoading}>
-                  <div className={styles.loader}></div>
-                  <p>Loading your song history...</p>
-                </div>
-              ) : (
-                renderCalendar()
-              )}
+
+            <div className={styles.calendar}>
+              <div className={styles.weekdayHeader}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day}>{day}</div>
+                ))}
+              </div>
+              
+              <div className={styles.daysGrid}>
+                {loading ? (
+                  <div className={styles.calendarLoading}>
+                    <div className={styles.loader}></div>
+                    <p>Loading your song history...</p>
+                  </div>
+                ) : (
+                  renderCalendar()
+                )}
+              </div>
             </div>
           </div>
         </div>
