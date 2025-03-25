@@ -840,10 +840,99 @@
   .additionalContent {
     grid-template-columns: 1fr;
   }
-.statsSection,
-.tracksSection {
+
+    .statsSection,
+    .tracksSection {
+      width: 100%;
+    }
+.header {
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.actions {
+  flex-direction: column;
   width: 100%;
 }
+
+.listenButton,
+.albumButton {
+  width: 100%;
+  justify-content: center;
+}
+
+.title {
+  font-size: 1.5rem;
+}
+
+.artist {
+  font-size: 1rem;
+}
+
+.metaInfo {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem var(--container-padding) 4rem;
+  }
+
+  .calendar {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .shareButtons,
+  .feedbackButtons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .shareButton,
+  .copyButton,
+  .likeButton,
+  .dislikeButton {
+    width: 100%;
+  }
+
+  .trackCard {
+    padding: 0.75rem;
+  }
+
+  .trackName {
+    font-size: 0.8rem;
+  }
+
+  .trackArtist {
+    font-size: 0.7rem;
+  }
+
+  .heading {
+    font-size: 1.75rem;
+  }
+
+  .subheading {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .additionalContent {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .songCard {
+    gap: 1.5rem;
+  }
+
+  .albumArtContainer {
+    max-width: 220px;
+  }
 }
 
 .statsList {

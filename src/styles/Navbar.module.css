@@ -107,6 +107,7 @@
   display: flex;
   align-items: center;
   gap: 2rem;
+  margin: 0 2rem;
 }
 
 .navLink {
@@ -137,6 +138,11 @@
   width: 100%;
 }
 
+.navLink i {
+  margin-right: 0.5rem;
+  font-size: 1rem;
+  color: #1DB954;
+}
 /* On mobile, adjust the nav layout */
 @media (max-width: 768px) {
   .container {
@@ -155,4 +161,204 @@
   .userSection {
     margin-left: auto;
   }
-} 
+}
+/* Hamburger button */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 25px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 11;
+}
+
+.hamburger span {
+  width: 30px;
+  height: 3px;
+  background: white;
+  border-radius: 10px;
+  transition: all 0.3s linear;
+  position: relative;
+  transform-origin: 1px;
+}
+
+.hamburger.active span:first-child {
+  transform: rotate(45deg);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg);
+}
+
+/* Mobile menu */
+.mobileMenu {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 75%;
+  max-width: 300px;
+  height: 100vh;
+  background: #121212;
+  padding: 2rem 1.5rem;
+  transition: right 0.3s ease-in-out;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.mobileMenu.open {
+  right: 0;
+}
+
+.mobileHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.mobileNavLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem 0;
+}
+
+.mobileNavLink {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.1rem;
+  padding: 0.5rem 0;
+}
+
+.mobileNavLink i {
+  width: 24px;
+  color: #1DB954;
+  text-align: center;
+}
+
+.mobileSignOutButton {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.mobileSignOutButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+
+  .navLinks,
+  .userSection {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .container {
+    padding: 0.75rem var(--container-padding);
+  }
+
+  .profileContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: 1rem;
+  }
+
+  .mobileMenu {
+    right: -100%;
+    width: 280px;
+    padding-top: 5rem;
+  }
+
+  .mobileHeader {
+    display: none;
+  }
+}
+
+/* Update navbar for mobile */
+@media (max-width: 768px) {
+  .navbar {
+    background-color: rgba(18, 18, 18, 0.98);
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .mobileProfileSection {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .mobileProfileSection .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobileMenu {
+    top: 72px;
+    height: calc(100vh - 72px);
+  }
+}
+
+/* Add backdrop when mobile menu is open */
+.mobileMenu::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.mobileMenu.open::before {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Add active state styles */
+.navLink.active,
+.mobileNavLink.active {
+  color: #1DB954;
+}
+
+.navLink.active::after {
+  width: 100%;
+}

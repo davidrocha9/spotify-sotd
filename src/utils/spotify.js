@@ -360,4 +360,39 @@ export const getUserSongStats = async (accessToken, trackId) => {
     console.error('Error fetching user song stats:', error);
     return { playCount: 0, lastPlayed: null };
   }
-}; 
+};
+
+export async function getTopItems(type, timeRange = 'short_term', accessToken, limit = 50) {
+  const response = await fetch(
+    `https://api.spotify.com/v1/me/top/${type}?time_range=${timeRange}&limit=${limit}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch top items');
+  }
+
+  return response.json();
+}
+
+export async function getGenres(accessToken) {
+  const response = await fetch(
+    'https://api.spotify.com/v1/recommendations/available-genre-seeds',
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch genres');
+  }
+
+  const data = await response.json();
+  return data.genres;
+} 

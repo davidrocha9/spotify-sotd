@@ -1,0 +1,144 @@
+.container {
+    width: 100%;
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 2rem var(--container-padding) 6rem;
+    position: relative;
+    z-index: 1;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+}
+
+.heading {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #b3b3b3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+}
+
+.cardsContainer {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    perspective: 1000px;
+}
+
+.card {
+    width: 200px;
+    height: 500px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.card:hover {
+    transform: translateY(-10px) rotateY(-5deg);
+    box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.cardSongs {
+    background: linear-gradient(to bottom, #1DB954 0%, #1ed760 100%);
+}
+
+.cardArtists {
+    background: linear-gradient(to bottom, #FF6B6B 0%, #FFE66D 100%);
+}
+
+.cardGenres {
+    background: linear-gradient(to bottom, #4A90E2 0%, #67B8F4 100%);
+}
+
+.cardOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+    transition: background-color 0.3s ease;
+}
+
+.card:hover .cardOverlay {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.cardIcon {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cardTitle {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cardDescription {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 600px;
+}
+
+.loader {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.05);
+    border-top-color: #1DB954;
+    animation: spinner 1s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 768px) {
+    .cardsContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card {
+        width: 160px;
+        height: 400px;
+    }
+
+    .cardTitle {
+        font-size: 1.5rem;
+    }
+
+    .cardDescription {
+        font-size: 0.8rem;
+    }
+}
