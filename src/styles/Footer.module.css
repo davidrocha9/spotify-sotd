@@ -22,4 +22,76 @@
     gap: 0.5rem;
     text-align: center;
   }
-} 
+}
+.socials {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.socials a {
+  color: var(--spotify-text-gray);
+  font-size: 1.25rem;
+  transition: color 0.2s ease;
+}
+
+.socials a:hover {
+  color: var(--spotify-white);
+}
+
+.socials a:hover i.fa-linkedin {
+  color: #0077b5;
+}
+
+.socials a:hover i.fa-github {
+  color: #fff;
+}
+
+.socials a:hover i.fa-globe {
+  color: var(--spotify-green);
+}
+
+.heart {
+  display: inline-block;
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.credits {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.powered {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.powered i {
+  color: var(--spotify-green);
+}
+
+@media (max-width: 640px) {
+  .credits {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .socials {
+    justify-content: center;
+  }
+}

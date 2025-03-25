@@ -53,7 +53,7 @@
   .hero {
     flex-direction: row;
     text-align: left;
-    padding: 2rem var(--container-padding) 8rem;
+    padding: 2rem var(--container-padding) 4rem;
   }
 }
 

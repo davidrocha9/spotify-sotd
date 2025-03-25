@@ -13,7 +13,6 @@
 
 .gradientBg {
   position: relative;
-  min-height: calc(100vh - 72px);
   width: 100%;
   overflow: hidden;
 }
@@ -34,7 +33,7 @@
   width: 100%;
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: 2rem var(--container-padding) 6rem;
+  padding: 0rem var(--container-padding) 0rem;
   position: relative;
   z-index: 1;
 }
