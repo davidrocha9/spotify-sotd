@@ -163,7 +163,7 @@ export async function checkTodaySong(userId) {
     
     // Format the song data
     if (data) {
-      console.log('Found today\'s song:', data.song_name);
+      console.log('Found today\'s song:', data);
       
       const formattedSong = {
         id: data.song_id,

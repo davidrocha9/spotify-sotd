@@ -185,7 +185,7 @@ export default function Dashboard() {
         return;
       }
       
-      console.log("Song found:", song.name, "by", song.artists?.[0]?.name);
+      console.log("Song found:", song.name, "by", song.artists?.[0]?.name, song);
       setSongOfTheDay(song);
       
       // Use the extracted helper function
@@ -214,18 +214,22 @@ export default function Dashboard() {
   }, [session, router]);
 
   const revealSong = async () => {
-    setRevealed(true)
+    setRevealed(true);
     
-    // Save the song to history when revealed
     if (session?.user?.id && songOfTheDay) {
       try {
-        await saveSongToHistory(session.user.id, songOfTheDay)
+        await saveSongToHistory(session.user.id, songOfTheDay);
+        
+        if (session?.user?.accessToken && songOfTheDay?.id) {
+          // Get related tracks
+          const tracks = await getRelatedTracks(songOfTheDay.id, session.user.accessToken);
+          setRelatedTracks(tracks);
+        }
       } catch (error) {
-        console.error('Error saving song history:', error)
-        // Continue with the UI flow even if saving fails
+        console.error('Error in reveal process:', error);
       }
     }
-  }
+  };
 
   const submitFeedback = async (feedback) => {
     // Implement the logic to submit feedback to the server
@@ -273,6 +277,147 @@ export default function Dashboard() {
       fetchSongOfTheDay();
     }
   }, [revealed, songOfTheDay, loading, error, fetchSongOfTheDay]);
+
+  // Add these functions if they don't exist
+  const getRelatedArtists = async (artistId, accessToken) => {
+    try {
+      console.log('Fetching artist details for:', artistId);
+      
+      // First get the artist's details
+      const artistResponse = await fetch(
+        `https://api.spotify.com/v1/artists/${artistId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!artistResponse.ok) {
+        throw new Error('Failed to fetch artist details');
+      }
+
+      const artistData = await artistResponse.json();
+      console.log('Artist data:', artistData);
+
+      // Get artists from the same genres
+      if (artistData.genres?.length > 0) {
+        // Get the artist's primary genre
+        const mainGenre = artistData.genres[0];
+        
+        // Get artists from the same genre, sorted by popularity
+        const searchResponse = await fetch(
+          `https://api.spotify.com/v1/search?q=genre:"${encodeURIComponent(mainGenre)}"&type=artist&limit=20`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (!searchResponse.ok) {
+          throw new Error('Failed to search for similar artists');
+        }
+
+        const searchData = await searchResponse.json();
+        
+        // Filter out the original artist and get the most popular ones
+        const similarArtists = searchData.artists.items
+          .filter(artist => {
+            // Filter out the original artist
+            if (artist.id === artistId) return false;
+            
+            // Check if they share at least one genre with the original artist
+            return artist.genres?.some(genre => artistData.genres.includes(genre));
+          })
+          .sort((a, b) => b.popularity - a.popularity)
+          .slice(0, 5);
+
+        console.log('Found similar artists:', similarArtists.length);
+        return similarArtists;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error in getRelatedArtists:', error);
+      return [];
+    }
+  };
+
+  const getRelatedTracks = async (trackId, accessToken) => {
+    try {
+      console.log('Fetching related tracks with token:', accessToken?.slice(0, 10) + '...');
+      
+      // First get the track details to get artist ID
+      const trackResponse = await fetch(
+        `https://api.spotify.com/v1/tracks/${trackId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!trackResponse.ok) {
+        throw new Error('Failed to fetch track details');
+      }
+      
+      const trackData = await trackResponse.json();
+      const artistId = trackData.artists[0]?.id;
+
+      if (!artistId) {
+        throw new Error('No artist ID found');
+      }
+
+      // Get artist's top tracks
+      const topTracksResponse = await fetch(
+        `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!topTracksResponse.ok) {
+        throw new Error('Failed to fetch artist top tracks');
+      }
+
+      const topTracksData = await topTracksResponse.json();
+      
+      // Filter out the current track and get up to 5 tracks
+      const relatedTracks = topTracksData.tracks
+        .filter(track => track.id !== trackId)
+        .slice(0, 5);
+
+      console.log('Related tracks response:', relatedTracks);
+      return relatedTracks;
+    } catch (error) {
+      console.error('Error fetching related tracks:', error);
+      return [];
+    }
+  };
+
+  // Add this new useEffect to fetch related content when page loads with a revealed song
+  useEffect(() => {
+    const fetchRelatedContent = async () => {
+      if (revealed && songOfTheDay && session?.user?.accessToken) {
+        try {
+          // Get related tracks
+          const tracks = await getRelatedTracks(songOfTheDay.id, session.user.accessToken);
+          setRelatedTracks(tracks);
+        } catch (error) {
+          console.error('Error fetching related content:', error);
+        }
+      }
+    };
+
+    fetchRelatedContent();
+  }, [revealed, songOfTheDay, session]);
 
   if (status === 'loading') {
     return <div className={styles.loadingScreen}><div className={styles.loader}></div></div>
@@ -359,13 +504,6 @@ export default function Dashboard() {
                               <span>{songOfTheDay.album.name}</span>
                             </div>
                             
-                            {songOfTheDay.duration_ms && (
-                              <div className={styles.metaItem}>
-                                <i className="fas fa-clock"></i>
-                                <span>{formatDuration(songOfTheDay.duration_ms)}</span>
-                              </div>
-                            )}
-                            
                             {songOfTheDay.popularity && (
                               <div className={styles.metaItem}>
                                 <i className="fas fa-chart-line"></i>
@@ -401,134 +539,96 @@ export default function Dashboard() {
                   </div>
                   
                   <div className={styles.additionalContent}>
-                    <div className={styles.infoCard}>
-                      <div className={styles.userStats}>
-                        <h3>Your Listening Stats</h3>
-                        <div className={styles.statsList}>
-                          {userStats ? (
-                            <>
-                              <div className={styles.statItem}>
-                                <i className="fas fa-calendar-check"></i>
-                                <span>Last played: {userStats.lastPlayed ? new Date(userStats.lastPlayed).toLocaleDateString() : 'Never played'}</span>
-                              </div>
-                              <div className={styles.statItem}>
-                                <i className="fas fa-play-circle"></i>
-                                <span>Played {userStats.playCount || 0} times in the last 30 days</span>
-                              </div>
-                              <div className={styles.statItem}>
-                                <i className="fas fa-chart-line"></i>
-                                <span>{userStats.playCount > 3 ? 'You love this track!' : userStats.playCount > 0 ? 'Getting familiar with this one' : 'New discovery for you'}</span>
-                              </div>
-                            </>
-                          ) : (
-                            <p className={styles.emptyStats}>We're tracking your listening habits to provide personalized insights.</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className={styles.shareSong}>
-                        <h3>Share This Discovery</h3>
-                        <div className={styles.shareButtons}>
-                          <button className={styles.shareButton} onClick={() => shareSong('twitter')}>
-                            <i className="fab fa-twitter"></i> Twitter
-                          </button>
-                          <button className={styles.copyButton} onClick={() => copyShareLink()}>
-                            <i className="fas fa-link"></i> Copy Link
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className={styles.feedbackSection}>
-                        <h3>Help Us Improve Your Recommendations</h3>
-                        <div className={styles.feedbackButtons}>
-                          <button className={styles.likeButton} onClick={() => submitFeedback('like')}>
-                            <i className="fas fa-thumbs-up"></i> Love It
-                          </button>
-                          <button className={styles.dislikeButton} onClick={() => submitFeedback('dislike')}>
-                            <i className="fas fa-thumbs-down"></i> Not For Me
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className={styles.infoCard}>
-                      <div className={styles.relatedSection}>
-                        <h3>Similar Artists</h3>
-                        <div className={styles.artistsGrid}>
-                          {relatedArtists.length > 0 ? (
-                            relatedArtists.map(artist => (
-                              <a 
-                                key={artist.id}
-                                href={artist.external_urls?.spotify} 
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.artistCard}
-                              >
-                                {artist.images?.[0]?.url && (
-                                  <div className={styles.artistImage}>
-                                    <Image
-                                      src={artist.images[0].url}
-                                      alt={artist.name}
-                                      width={60}
-                                      height={60}
-                                    />
-                                  </div>
-                                )}
-                                <span>{artist.name}</span>
-                              </a>
-                            ))
-                          ) : (
-                            <p className={styles.emptyItems}>Looking for similar artists...</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className={styles.infoCard}>
-                      <div className={styles.relatedSection}>
-                        <h3>Similar Tracks</h3>
-                        <div className={styles.tracksGrid}>
-                          {relatedTracks.length > 0 ? (
-                            relatedTracks.map(track => (
-                              <a 
-                                key={track.id}
-                                href={track.external_urls?.spotify} 
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.trackCard}
-                              >
-                                {track.album?.images?.[0]?.url && (
-                                  <div className={styles.trackImage}>
-                                    <Image
-                                      src={track.album.images[0].url}
-                                      alt={`${track.name} album art`}
-                                      width={50}
-                                      height={50}
-                                    />
-                                  </div>
-                                )}
-                                <div className={styles.trackInfo}>
-                                  <span className={styles.trackName}>{track.name}</span>
-                                  <span className={styles.trackArtist}>
-                                    {track.artists.map(a => a.name).join(', ')}
-                                  </span>
+                    <div className={styles.statsSection}>
+                      <div className={styles.infoCard}>
+                        <div className={styles.userStats}>
+                          <h3>Your Listening Stats</h3>
+                          <div className={styles.statsList}>
+                            {userStats ? (
+                              <>
+                                <div className={styles.statItem}>
+                                  <i className="fas fa-calendar-check"></i>
+                                  <span>Last played: {userStats.lastPlayed ? new Date(userStats.lastPlayed).toLocaleDateString() : 'Never played'}</span>
                                 </div>
-                              </a>
-                            ))
-                          ) : (
-                            <p className={styles.emptyItems}>Looking for similar tracks...</p>
-                          )}
+                                <div className={styles.statItem}>
+                                  <i className="fas fa-play-circle"></i>
+                                  <span>Played {userStats.playCount || 0} times in the last 30 days</span>
+                                </div>
+                                <div className={styles.statItem}>
+                                  <i className="fas fa-chart-line"></i>
+                                  <span>{userStats.playCount > 3 ? 'You love this track!' : userStats.playCount > 0 ? 'Getting familiar with this one' : 'New discovery for you'}</span>
+                                </div>
+                              </>
+                            ) : (
+                              <p className={styles.emptyStats}>No listening stats available</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className={styles.shareSong}>
+                          <h3>Share This Discovery</h3>
+                          <div className={styles.shareButtons}>
+                            <button className={styles.shareButton} onClick={() => shareSong('twitter')}>
+                              <i className="fab fa-twitter"></i> Twitter
+                            </button>
+                            <button className={styles.copyButton} onClick={() => copyShareLink()}>
+                              <i className="fas fa-link"></i> Copy Link
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className={styles.feedbackSection}>
+                          <h3>Help Us Improve Your Recommendations</h3>
+                          <div className={styles.feedbackButtons}>
+                            <button className={styles.likeButton} onClick={() => submitFeedback('like')}>
+                              <i className="fas fa-thumbs-up"></i> Love It
+                            </button>
+                            <button className={styles.dislikeButton} onClick={() => submitFeedback('dislike')}>
+                              <i className="fas fa-thumbs-down"></i> Not For Me
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      
-                      {songOfTheDay.preview_url && (
-                        <div className={styles.previewPlayer}>
-                          <h3>Listen to Preview</h3>
-                          <audio controls src={songOfTheDay.preview_url} className={styles.audioPlayer}>
-                            Your browser does not support the audio element.
-                          </audio>
+                    </div>
+
+                    <div className={styles.tracksSection}>
+                      <div className={styles.infoCard}>
+                        <div className={styles.relatedSection}>
+                          <h3>Similar Tracks</h3>
+                          <div className={styles.tracksGrid}>
+                            {relatedTracks.length > 0 ? (
+                              relatedTracks.map(track => (
+                                <a 
+                                  key={track.id}
+                                  href={track.external_urls?.spotify} 
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={styles.trackCard}
+                                >
+                                  {track.album?.images?.[0]?.url && (
+                                    <div className={styles.trackImage}>
+                                      <Image
+                                        src={track.album.images[0].url}
+                                        alt={`${track.name} album art`}
+                                        width={50}
+                                        height={50}
+                                      />
+                                    </div>
+                                  )}
+                                  <div className={styles.trackInfo}>
+                                    <span className={styles.trackName}>{track.name}</span>
+                                    <span className={styles.trackArtist}>
+                                      {track.artists.map(a => a.name).join(', ')}
+                                    </span>
+                                  </div>
+                                </a>
+                              ))
+                            ) : (
+                              <p className={styles.emptyItems}>No similar tracks found</p>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </>

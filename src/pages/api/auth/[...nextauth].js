@@ -10,7 +10,8 @@ const scopes = [
   'user-top-read',
   'user-read-recently-played',
   'playlist-modify-public',
-  'playlist-modify-private'
+  'playlist-modify-private',
+  'user-read-playback-state'
 ].join(' ')
 
 export default NextAuth({
@@ -19,7 +20,9 @@ export default NextAuth({
       clientId: process.env.SPOTIFY_CLIENT_ID,
       clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
       authorization: {
-        params: { scope: scopes }
+        params: {
+          scope: 'user-read-email user-read-private user-top-read playlist-modify-public playlist-modify-private user-read-recently-played user-read-playback-state'
+        }
       }
     })
   ],
