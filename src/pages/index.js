@@ -67,10 +67,10 @@ export default function Home() {
   
   // Handle redirect after hooks have been called
   useEffect(() => {
-    if (status === 'authenticated') {
-      router.push('/dashboard');
+    if (status === 'authenticated' && session?.user?.accessToken) {
+      router.push('/dashboard')
     }
-  }, [status, router]);
+  }, [session, status, router])
 
   // User is authenticated, but we've already called all hooks
   if (status === 'authenticated') {

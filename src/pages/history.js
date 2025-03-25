@@ -7,6 +7,7 @@ import Image from 'next/image'
 import styles from '../styles/History.module.css'
 import { createPlaylist } from '../utils/spotify'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns'
+import Link from 'next/link'
 
 export default function History() {
   const { data: session, status } = useSession()
@@ -70,7 +71,7 @@ export default function History() {
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className={styles.emptyDay}></div>)
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(selectedYear, selectedMonth, day)
@@ -82,22 +83,39 @@ export default function History() {
                            selectedMonth === currentMonth && 
                            selectedYear === currentYear
       
+      console.log("Song for day", day, ":", song)
+      
+      // Check if today's song is unrevealed
+      const isUnrevealed = isCurrentDay && !song;
+      
       days.push(
         <div key={day} className={`${styles.day} ${isCurrentDay ? styles.currentDay : ''}`}>
           <div className={styles.dayNumber}>{day}</div>
           {song ? (
             <div className={styles.songThumbnail}>
-              <Image 
-                src={song.album.images[0].url}
-                alt={song.name}
-                width={70}
-                height={70}
-                className={styles.albumCover}
-              />
-              <div className={styles.songTooltip}>
-                <strong>{song.name}</strong>
-                <span>{song.artists.map(a => a.name).join(', ')}</span>
-              </div>
+              {isUnrevealed ? (
+                // Show clickable present icon for unrevealed song (without text)
+                <Link href="/dashboard" className={styles.presentLink}>
+                  <div className={styles.presentIcon}>
+                    <i className="fas fa-gift"></i>
+                  </div>
+                </Link>
+              ) : (
+                // Show regular album art with tooltip
+                <>
+                  <Image 
+                    src={song.album.images[0].url}
+                    alt={song.name}
+                    width={70}
+                    height={70}
+                    className={styles.albumCover}
+                  />
+                  <div className={styles.songTooltip}>
+                    <strong>{song.name}</strong>
+                    <span>{song.artists.map(a => a.name).join(', ')}</span>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className={styles.noSong}>

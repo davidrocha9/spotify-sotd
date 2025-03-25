@@ -28,100 +28,30 @@ export default NextAuth({
     async jwt({ token, account, user }) {
       // Initial sign in
       if (account && user) {
-        console.log("Authentication successful, user data:", { id: user.id, name: user.name });
-        
-        // Create or update user in Supabase when they sign in
-        if (user.id) {
-          try {
-            // First check if user exists by spotify_id
-            console.log("Checking if user exists in Supabase with spotify_id:", user.id);
-            
-            const { data: existingUser, error: checkError } = await supabase
-              .from('users')
-              .select('id, spotify_id')
-              .eq('spotify_id', user.id)
-              .single();
-            
-            if (checkError && checkError.code !== 'PGRST116') {
-              console.error("Error checking for existing user:", checkError.message, checkError.details);
-            }
-            
-            console.log("Existing user check result:", existingUser);
-            
-            // Store the Supabase UUID in the token for future use
-            let supabaseUserId;
-            
-            // User doesn't exist, create them with a new UUID
-            if (!existingUser) {
-              console.log("Creating new user in Supabase");
-              
-              // Generate a proper UUID for Supabase
-              supabaseUserId = uuidv4();
-              
-              const userData = {
-                id: supabaseUserId,  // Use proper UUID format
-                email: user.email || null,
-                spotify_id: user.id,  // Store the Spotify ID here
-                display_name: user.name || null,
-                avatar_url: user.image || null
-              };
-              
-              console.log("User data to insert:", userData);
-              
-              const { data: insertResult, error: insertError } = await supabase
-                .from('users')
-                .insert(userData)
-                .select();
-                
-              if (insertError) {
-                console.error("Error creating user:", insertError.message, insertError.details);
-                console.error("Full error object:", JSON.stringify(insertError, null, 2));
-              } else {
-                console.log("User created successfully:", insertResult);
-              }
-            } else {
-              // User exists, use their Supabase UUID
-              supabaseUserId = existingUser.id;
-              
-              console.log("Updating existing user in Supabase");
-              
-              const { data: updateResult, error: updateError } = await supabase
-                .from('users')
-                .update({
-                  email: user.email || null,
-                  display_name: user.name || null,
-                  avatar_url: user.image || null
-                })
-                .eq('id', supabaseUserId)
-                .select();
-                
-              if (updateError) {
-                console.error("Error updating user:", updateError.message, updateError.details);
-              } else {
-                console.log("User updated successfully:", updateResult);
-              }
-            }
-            
-            // Save the Supabase UUID to use in the session
-            token.supabaseUserId = supabaseUserId;
-          } catch (error) {
-            console.error('Error syncing user with Supabase:', error.message);
-            console.error('Full error object:', JSON.stringify(error, null, 2));
-          }
-        }
+        console.log("Initial sign in, setting token expiry");
         
         return {
           ...token,
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           username: account.providerAccountId,
-          accessTokenExpires: account.expires_at * 1000,
-          id: user.id
+          id: user.id,
+          supabaseUserId: null, // Will be filled below
+          expiresAt: account.expires_at 
+            ? Math.floor(Date.now() / 1000 + account.expires_at)
+            : Math.floor(Date.now() / 1000 + 3600),
         }
       }
 
-      // Return previous token if not expired yet
-      return token
+      // Return previous token if the access token has not expired yet
+      if (Date.now() < token.expiresAt * 1000) {
+        console.log("Token still valid, returning existing token");
+        return token
+      }
+
+      // Access token has expired, try to refresh it
+      console.log("Token expired in jwt callback, refreshing...");
+      return refreshAccessToken(token)
     },
     async session({ session, token }) {
       // Add the user ID and tokens to the session
@@ -159,8 +89,11 @@ async function refreshAccessToken(token) {
     const refreshedTokens = await response.json()
 
     if (!response.ok) {
+      console.error("Token refresh failed:", refreshedTokens);
       throw refreshedTokens
     }
+
+    console.log("Token refreshed successfully in NextAuth");
 
     return {
       ...token,
@@ -169,6 +102,7 @@ async function refreshAccessToken(token) {
       refreshToken: refreshedTokens.refresh_token ?? token.refreshToken
     }
   } catch (error) {
+    console.error("Error refreshing token in NextAuth:", error);
     return {
       ...token,
       error: 'RefreshAccessTokenError'

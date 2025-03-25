@@ -1,4 +1,4 @@
-import { useSession } from 'next-auth/react'
+import { useSession, getSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState, useCallback } from 'react'
 import { getSongOfTheDay, getRelatedContent, getUserSongStats } from '../utils/spotify'
@@ -127,65 +127,52 @@ export default function Dashboard() {
     }
   };
 
-  // Add a function to handle token refresh
+  // Update the refreshAccessToken function
   const refreshAccessToken = async () => {
     try {
       console.log("Attempting to refresh access token...");
       
-      // Use the built-in NextAuth refresh mechanism
-      const response = await fetch('/api/auth/session?update=true', { 
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      // Use a direct fetch without page navigation
+      const response = await fetch('/api/auth/refresh', { 
+        method: 'POST',
+        credentials: 'same-origin'
       });
       
       if (!response.ok) {
         throw new Error("Failed to refresh token");
       }
       
-      // Get the updated session
-      const updatedSession = await response.json();
+      // Get the updated token
+      const data = await response.json();
       console.log("Token refreshed successfully");
       
-      return updatedSession?.user?.accessToken;
+      // Force session update
+      await getSession({ force: true });
+      
+      return data.accessToken;
     } catch (error) {
       console.error("Error refreshing token:", error);
       return null;
     }
   };
 
-  // Simplify the fetchSongOfTheDay function to avoid duplicate logic
-  const fetchSongOfTheDay = useCallback(async (shouldRetry = true) => {
+  // Update the fetchSongOfTheDay function to use a better approach
+  const fetchSongOfTheDay = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       console.log("Fetching song of the day...");
-      const song = await getSongOfTheDay(session?.user?.accessToken);
+      const song = await getSongOfTheDay(null, session?.user?.id);
       
       if (!song) {
         console.error("No song returned from getSongOfTheDay");
-        
-        // Try refreshing token and retry if this is the first attempt
-        if (shouldRetry) {
-          console.log("Attempting to refresh token and retry...");
-          const newToken = await refreshAccessToken();
-          
-          if (newToken) {
-            console.log("Token refreshed, retrying API call");
-            // Need to reload the session to get the new token
-            router.push('/api/auth/session?update=true&redirect=/dashboard');
-            return;
-          }
-        }
-        
         setError("Failed to fetch song recommendation. Please try again later.");
         setLoading(false);
         return;
       }
       
-      console.log("Song found:", song.name, "by", song.artists?.[0]?.name, song);
+      console.log("Song found:", song.name, "by", song.artists?.[0]?.name);
       setSongOfTheDay(song);
       
       // Use the extracted helper function
@@ -194,24 +181,10 @@ export default function Dashboard() {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching song of the day:', err);
-      
-      // Check if error is due to unauthorized (expired token)
-      if (err.response?.status === 401 && shouldRetry) {
-        console.log("Received 401 unauthorized, attempting token refresh...");
-        const newToken = await refreshAccessToken();
-        
-        if (newToken) {
-          console.log("Token refreshed, retrying API call");
-          // Reload the page to get the new token in the session
-          router.push('/api/auth/session?update=true&redirect=/dashboard');
-          return;
-        }
-      }
-      
       setError('Failed to fetch your song recommendation. Please try again later.');
       setLoading(false);
     }
-  }, [session, router]);
+  }, [session?.user?.id]);
 
   const revealSong = async () => {
     setRevealed(true);
