@@ -90,6 +90,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    justify-content: space-between;
 }
 
 .monthName {
@@ -105,10 +106,18 @@
     color: #b3b3b3;
     font-size: 0.9rem;
     margin-top: auto;
+    height: 1.5rem;
+        line-height: 1.5rem;
 }
 
 .songsCount i {
     color: #1DB954;
+    font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
 }
 
 .cardFooter {
@@ -169,9 +178,12 @@
 }
 
 .emptyIcon {
-    font-size: 3rem;
-    color: #1DB954;
-    margin-bottom: 1.5rem;
+    color: #b3b3b3;
+        font-size: inherit;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
 }
 
 .emptyButton {
@@ -242,7 +254,7 @@
     background: rgba(255, 255, 255, 0.05);
 }
 
-.emptyIcon {
+.emptyMonth .songsCount i {
     color: #b3b3b3;
 }
 
