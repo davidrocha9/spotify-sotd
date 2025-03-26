@@ -1,0 +1,293 @@
+.gradientBg {
+    position: relative;
+    min-height: 100vh;
+    background-color: #121212;
+    overflow: hidden;
+}
+
+.gradientBg::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 70%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(29, 185, 84, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+    z-index: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #b3b3b3;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.backButton:hover {
+    color: #fff;
+}
+
+.heading {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+.playlistActions {
+    display: flex;
+    gap: 1rem;
+}
+
+.createPlaylistButton,
+.openPlaylistButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.createPlaylistButton {
+    background-color: #1DB954;
+    color: #fff;
+    border: none;
+}
+
+.createPlaylistButton:hover:not(:disabled) {
+    background-color: #1ed760;
+    transform: scale(1.05);
+}
+
+.createPlaylistButton:disabled {
+    background-color: #1db95480;
+    cursor: not-allowed;
+}
+
+.openPlaylistButton {
+    background-color: #191919;
+    color: #fff;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.openPlaylistButton:hover {
+    background-color: #252525;
+    transform: scale(1.05);
+}
+
+.smallLoader {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 2px solid #fff;
+    width: 14px;
+    height: 14px;
+    animation: spin 1s linear infinite;
+}
+
+.playlistContainer {
+    margin-top: 2rem;
+}
+
+.songsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.songCard {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.songCard:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.songNumber {
+    width: 24px;
+    color: #b3b3b3;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.songImage {
+    margin: 0 1rem;
+}
+
+.albumCover {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.songInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.songNameDate {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.songName {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.songDate {
+    font-size: 0.8rem;
+    color: #b3b3b3;
+}
+
+.artistName {
+    font-size: 0.9rem;
+    color: #b3b3b3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.songActions {
+    display: flex;
+    gap: 1rem;
+}
+
+.playButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #1DB954;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.playButton:hover {
+    transform: scale(1.1);
+    background-color: #1ed760;
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+}
+
+.loader {
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #1DB954;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: #b3b3b3;
+}
+
+.emptyIcon {
+    font-size: 3rem;
+    color: #1DB954;
+    margin-bottom: 1.5rem;
+}
+
+.emptyButton {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #1DB954;
+    color: #fff;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.emptyButton:hover {
+    background-color: #1ed760;
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .albumCover {
+        width: 50px;
+        height: 50px;
+    }
+
+    .songCard {
+        padding: 0.75rem;
+    }
+
+    .songImage {
+        margin: 0 0.75rem;
+    }
+
+    .songDate {
+        display: none;
+    }
+}

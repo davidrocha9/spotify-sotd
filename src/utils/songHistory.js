@@ -133,38 +133,38 @@ export async function getSongHistory(userId, month, year) {
 // Check if the user already has a song for today
 export async function checkTodaySong(userId) {
   try {
-    console.log('Checking if user has a song for today, userId:', userId);
-    
+    console.log("Checking if user has a song for today, userId:", userId);
+
     // Get today's date range
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0];
-    
+    const today = new Date().toISOString().split("T")[0];
+    const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0];
+
     console.log(`Checking date range: ${today} to ${tomorrow}`);
-    
+
     // Query Supabase for today's song
     const { data, error } = await supabase
-      .from('song_history')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('revealed_at', today)
-      .lt('revealed_at', tomorrow)
+      .from("song_history")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("revealed_at", today)
+      .lt("revealed_at", tomorrow)
       .single();
-    
+
     if (error) {
       // PGRST116 means no rows returned, which is fine
-      if (error.code === 'PGRST116') {
-        console.log('No song found for today');
+      if (error.code === "PGRST116") {
+        console.log("No song found for today");
         return { exists: false, song: null };
       }
-      
-      console.error('Error checking today\'s song:', error);
+
+      console.error("Error checking today's song:", error);
       throw error;
     }
-    
+
     // Format the song data
     if (data) {
-      console.log('Found today\'s song:', data);
-      
+      console.log("Found today's song:", data);
+
       const formattedSong = {
         id: data.song_id,
         name: data.song_name,
@@ -172,21 +172,89 @@ export async function checkTodaySong(userId) {
         album: {
           name: data.album_name,
           images: [{ url: data.album_image_url }],
-          id: data.song_id.split(':')[2] || data.song_id // Extract album ID
+          id: data.song_id.split(":")[2] || data.song_id, // Extract album ID
         },
         external_urls: {
-          spotify: data.external_url
+          spotify: data.external_url,
         },
         popularity: data.popularity,
-        duration_ms: 0 // We don't store this, so use a default
+        duration_ms: 0, // We don't store this, so use a default
       };
-      
+
       return { exists: true, song: formattedSong };
     }
-    
+
     return { exists: false, song: null };
   } catch (error) {
-    console.error('Error in checkTodaySong:', error);
+    console.error("Error in checkTodaySong:", error);
     return { exists: false, song: null, error };
+  }
+}
+
+// Get available months with song counts for the user
+export async function getAvailableMonths(userId) {
+  try {
+    console.log("Fetching available months for user:", userId);
+
+    // Get today's date for comparison
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // 1-based
+
+    // Get all songs for this user
+    const { data, error } = await supabase
+      .from("song_history")
+      .select("*") // Select all columns to ensure we get complete date info
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Error fetching song dates:", error);
+      return [];
+    }
+
+    console.log(`Found ${data?.length || 0} total songs in history`);
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // Group by year and month
+    const monthCounts = data.reduce((acc, song) => {
+      // Parse the revealed_at date
+      const date = new Date(song.revealed_at);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // 1-12 (January is 1)
+
+      const key = `${year}-${month}`;
+
+      // Debug each song's date
+      console.log(`Song "${song.song_name}" revealed at ${song.revealed_at}, parsed as Year: ${year}, Month: ${month}`);
+
+      if (!acc[key]) {
+        acc[key] = {
+          year,
+          month,
+          songCount: 0,
+        };
+      }
+
+      acc[key].songCount++;
+      return acc;
+    }, {});
+
+    console.log("Month counts:", monthCounts);
+
+    // Convert to array and sort by date (newest first)
+    const result = Object.values(monthCounts).sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
+    });
+
+    console.log("Processed month data:", result);
+
+    return result;
+  } catch (error) {
+    console.error("Error in getAvailableMonths:", error);
+    return [];
   }
 } 

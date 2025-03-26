@@ -15,30 +15,23 @@ export default function Navbar() {
           <i className="fab fa-spotify"></i>
           <span>Song of the Day</span>
         </Link>
-        
+
         {session && (
           <>
             {/* Desktop Navigation */}
             <div className={styles.desktopNav}>
               <div className={styles.links}>
                 <Link href="/dashboard">Today's Song</Link>
+                <Link href="/playlists">Monthly Playlists</Link>
                 <Link href="/rankings">Rankings</Link>
                 <Link href="/history">History</Link>
               </div>
-              
+
               <div className={styles.profile}>
                 {session.user?.image ? (
-                  <Image 
-                    src={session.user.image}
-                    alt="Profile"
-                    width={32}
-                    height={32}
-                    className={styles.avatar}
-                  />
+                  <Image src={session.user.image} alt="Profile" width={32} height={32} className={styles.avatar} />
                 ) : (
-                  <div className={styles.avatarFallback}>
-                    {session.user?.name?.[0] || 'U'}
-                  </div>
+                  <div className={styles.avatarFallback}>{session.user?.name?.[0] || "U"}</div>
                 )}
                 <button onClick={() => signOut()} className={styles.signOutButton}>
                   <i className="fas fa-sign-out-alt"></i>
@@ -48,11 +41,8 @@ export default function Navbar() {
 
             {/* Mobile Navigation */}
             <div className={styles.mobileNav}>
-              <button 
-                className={styles.menuButton}
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+              <button className={styles.menuButton} onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                <i className={`fas ${isMenuOpen ? "fa-times" : "fa-bars"}`}></i>
               </button>
 
               {isMenuOpen && (
@@ -76,5 +66,5 @@ export default function Navbar() {
         )}
       </div>
     </nav>
-  )
+  );
 } 

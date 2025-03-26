@@ -1,0 +1,253 @@
+.gradientBg {
+    position: relative;
+    min-height: 100vh;
+    background-color: #121212;
+    overflow: hidden;
+}
+
+.gradientBg::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 70%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(29, 185, 84, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+    z-index: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.heading {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.subheading {
+    font-size: 1.1rem;
+    color: #b3b3b3;
+}
+
+.playlistsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.yearSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.yearHeading {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.monthsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.monthCard {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: #fff;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+}
+
+.monthCard:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.monthContent {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.monthName {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.songsCount {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #b3b3b3;
+    font-size: 0.9rem;
+    margin-top: auto;
+}
+
+.songsCount i {
+    color: #1DB954;
+}
+
+.cardFooter {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.viewButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1DB954;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.viewButton i {
+    font-size: 0.8rem;
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+}
+
+.loader {
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #1DB954;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: #b3b3b3;
+}
+
+.emptyIcon {
+    font-size: 3rem;
+    color: #1DB954;
+    margin-bottom: 1.5rem;
+}
+
+.emptyButton {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #1DB954;
+    color: #fff;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.emptyButton:hover {
+    background-color: #1ed760;
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .monthsGrid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
+    .monthCard {
+        height: 160px;
+    }
+
+    .monthName {
+        font-size: 1.2rem;
+    }
+}
+
+.yearSelector {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.yearButton {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #b3b3b3;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.yearButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.activeYear {
+    background: #1DB954;
+    color: #fff;
+}
+
+.emptyMonth {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.emptyMonth:hover {
+    transform: none;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.emptyIcon {
+    color: #b3b3b3;
+}
+
+.emptyLabel {
+    color: #b3b3b3;
+    font-size: 0.9rem;
+    font-style: italic;
+}
