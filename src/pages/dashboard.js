@@ -71,17 +71,17 @@ export default function Dashboard() {
       setLoading(true);
       
       if (session?.user?.id) {
-        console.log("Checking for existing song for user:", session.user.id)
+        console.log("Checking for existing song for user:", session.user.id);
         // Check if user already has a song for today
         const { exists, song } = await checkTodaySong(session.user.id);
-        
-        console.log("Song exists for today:", exists)
+
+        console.log("Song exists for today:", exists);
         if (exists && song) {
           // If song already exists, use it and mark it as revealed
           setSongOfTheDay(song);
           setRevealed(true);
           setLoading(false);
-          
+
           // Also fetch related content and stats for the existing song
           fetchRelatedContentAndStats(song);
           return;

@@ -33,7 +33,7 @@
 
 .card {
     width: 280px;
-        height: 700px;
+        height: 50vh;
         border-radius: 12px;
     overflow: hidden;
     position: relative;
