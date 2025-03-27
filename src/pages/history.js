@@ -20,12 +20,15 @@ export default function History() {
       router.push('/')
     }
     
+    console.log(session);
+
     if (session?.user?.id) {
       fetchSongHistory()
     }
   }, [session, status, router, selectedMonth, selectedYear])
   
   const fetchSongHistory = async () => {
+    console.log("Fetching song history for user:", session.user.id);
     try {
       setLoading(true)
       

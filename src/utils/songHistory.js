@@ -3,15 +3,22 @@ import { supabase } from './supabase';
 // Save a revealed song to the user's history
 export async function saveSongToHistory(userId, song) {
   try {
-    console.log('Saving song to history for user:', userId);
-    console.log('Song data:', { id: song.id, name: song.name });
-    
+    console.log("Saving song to history for user:", userId);
+
+    // Early check for null/undefined userId
+    if (!userId) {
+      console.error("Cannot save song: userId is null or undefined");
+      return { success: false, error: "No user ID provided" };
+    }
+
+    console.log("Song data:", { id: song.id, name: song.name });
+
     // Format the song data for storage
     const songData = {
       user_id: userId,
       song_id: song.id,
       song_name: song.name,
-      artist_name: song.artists.map(artist => artist.name).join(', '),
+      artist_name: song.artists.map((artist) => artist.name).join(", "),
       album_name: song.album.name,
       album_image_url: song.album.images[0]?.url || null,
       popularity: song.popularity || null,
@@ -20,28 +27,25 @@ export async function saveSongToHistory(userId, song) {
       revealed_at: new Date().toISOString(),
     };
 
-    console.log('Formatted song data to save:', songData);
+    console.log("Formatted song data to save:", songData);
 
     // Insert into Supabase
-    const { data, error } = await supabase
-      .from('song_history')
-      .insert(songData)
-      .select();
+    const { data, error } = await supabase.from("song_history").insert(songData).select();
 
     if (error) {
-      console.error('Error inserting song history:', error);
-      
+      console.error("Error inserting song history:", error);
+
       // If we got a unique constraint error, let's update instead
-      if (error.code === '23505') {
-        console.log('Song already exists for today, updating instead');
-        
-        const today = new Date().toISOString().split('T')[0];
-        const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0];
-        
+      if (error.code === "23505") {
+        console.log("Song already exists for today, updating instead");
+
+        const today = new Date().toISOString().split("T")[0];
+        const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0];
+
         console.log(`Updating song for date range: ${today} to ${tomorrow}`);
-        
+
         const { data: updateData, error: updateError } = await supabase
-          .from('song_history')
+          .from("song_history")
           .update({
             song_id: song.id,
             song_name: song.name,
@@ -51,24 +55,24 @@ export async function saveSongToHistory(userId, song) {
             popularity: song.popularity,
             external_url: songData.external_url,
           })
-          .eq('user_id', userId)
-          .gte('revealed_at', today)
-          .lt('revealed_at', tomorrow)
+          .eq("user_id", userId)
+          .gte("revealed_at", today)
+          .lt("revealed_at", tomorrow)
           .select();
-        
+
         if (updateError) {
-          console.error('Error updating song history:', updateError);
+          console.error("Error updating song history:", updateError);
           throw updateError;
         }
-        
-        console.log('Successfully updated song:', updateData);
+
+        console.log("Successfully updated song:", updateData);
         return { success: true, data: updateData };
       } else {
         throw error;
       }
     }
-    
-    console.log('Successfully saved song to history:', data);
+
+    console.log("Successfully saved song to history:", data);
     return { success: true, data };
   } catch (error) {
     console.error('Error saving song to history:', error);

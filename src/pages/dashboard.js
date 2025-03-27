@@ -76,6 +76,8 @@ export default function Dashboard() {
       setDataLoaded(true);
       setLoading(true);
 
+      console.log("Session:", session);
+
       if (session?.user?.id) {
         console.log("Checking for existing song for user:", session.user.id);
         // Check if user already has a song for today
