@@ -73,8 +73,8 @@ export default function History() {
 
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(selectedYear, selectedMonth, day)
-      const dateKey = date.toISOString().split('T')[0]
+      // FIX: Create a date string in YYYY-MM-DD format that doesn't depend on timezone
+      const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       const song = songHistory[dateKey]
       
       // Check if this is the current day
