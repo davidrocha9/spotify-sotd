@@ -149,54 +149,6 @@ export default function History() {
     setSelectedYear(newYear)
   }
   
-  const createMonthlyPlaylist = async () => {
-    try {
-      setCreatingPlaylist(true);
-      
-      // Collect all song IDs from the month
-      const songIds = Object.values(songHistory)
-        .filter(song => song && song.id)
-        .map(song => song.id);
-      
-      if (songIds.length === 0) {
-        alert("No songs available to create a playlist");
-        return;
-      }
-      
-      // Create the playlist
-      const playlistName = `${monthNames[selectedMonth]} ${selectedYear}`;
-      const playlistDescription = `Songs discovered through Spotify Song of the Day in ${monthNames[selectedMonth]} ${selectedYear}.`;
-      
-      // Call the API to create the playlist
-      const response = await fetch('/api/createPlaylist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          accessToken: session.user.accessToken,
-          name: playlistName,
-          description: playlistDescription,
-          songIds: songIds,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok && data.playlistUrl) {
-        // Success! Open the playlist in a new tab
-        window.open(data.playlistUrl, '_blank');
-      } else {
-        throw new Error(data.error || 'Failed to create playlist');
-      }
-    } catch (error) {
-      console.error('Error creating playlist:', error);
-      alert(`Failed to create playlist: ${error.message}`);
-    } finally {
-      setCreatingPlaylist(false);
-    }
-  };
-  
   if (status === 'loading') {
     return <div className={styles.loadingScreen}><div className={styles.loader}></div></div>
   }
@@ -235,24 +187,6 @@ export default function History() {
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
-            
-            <button 
-              className={styles.createPlaylistButton}
-              onClick={createMonthlyPlaylist}
-              disabled={creatingPlaylist}
-            >
-              {creatingPlaylist ? (
-                <>
-                  <div className={styles.smallLoader}></div>
-                  <span>Creating...</span>
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-music"></i>
-                  <span>Create Spotify Playlist</span>
-                </>
-              )}
-            </button>
           </div>
           
           <div className={styles.calendar}>
