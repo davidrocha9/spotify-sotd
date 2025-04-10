@@ -201,8 +201,7 @@ export default function Dashboard() {
       const artistName = songOfTheDay.artists[0].name;
       const songUrl = songOfTheDay.external_urls.spotify;
 
-      const tweetText = `${songUrl}
-      found this banger via https://spotify-sotd.vercel.app/`;
+      const tweetText = `this banger is my song of the day (via https://spotify-sotd.vercel.app/) ${songUrl}`;
 
       // Create the Twitter share URL with encoded text
       const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
@@ -215,8 +214,7 @@ export default function Dashboard() {
   const handleCopyLink = () => {
     if (!songOfTheDay) return;
 
-    const shareText = `${songUrl}
-      found this banger via https://spotify-sotd.vercel.app/`;
+    const shareText = `this banger is my song of the day (via https://spotify-sotd.vercel.app/) ${songUrl}`;
 
     navigator.clipboard
       .writeText(shareText)
