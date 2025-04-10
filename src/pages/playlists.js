@@ -68,7 +68,6 @@ export default function Playlists() {
   const monthsLookup = {};
   availableMonths.forEach(({ year, month, songCount }) => {
     const key = `${year}-${month}`;
-    console.log(`Adding month to lookup: ${key} with ${songCount} songs`);
     monthsLookup[key] = songCount;
   });
 
@@ -126,8 +125,6 @@ export default function Playlists() {
                       const key = `${selectedYear}-${month}`;
                       const songCount = monthsLookup[key] || 0;
                       const isEmpty = songCount === 0;
-
-                      console.log(`Month ${month}: Key=${key}, SongCount=${songCount}, isEmpty=${isEmpty}`);
 
                       return (
                         <Link

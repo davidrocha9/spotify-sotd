@@ -76,14 +76,10 @@ export default function Dashboard() {
       setDataLoaded(true);
       setLoading(true);
 
-      console.log("Session:", session);
-
       if (session?.user?.id) {
-        console.log("Checking for existing song for user:", session.user.id);
         // Check if user already has a song for today
         const { exists, song } = await checkTodaySong(session.user.id);
 
-        console.log("Song exists for today:", exists);
         if (exists && song) {
           // If song already exists, use it and mark it as revealed
           setSongOfTheDay(song);
@@ -99,7 +95,6 @@ export default function Dashboard() {
       // Only fetch a new song if we didn't find one in the database
       await fetchSongOfTheDay();
     } catch (error) {
-      console.error("Error checking for existing song:", error);
       await fetchSongOfTheDay();
     }
   };
@@ -109,16 +104,7 @@ export default function Dashboard() {
     try {
       // Get similar artists and tracks based on the song and artist
       if (song?.id && song?.artists?.[0]?.id) {
-        console.log("Fetching related content for:", song.id, song.artists[0].id);
         const relatedContent = await getRelatedContent(session.user.accessToken, song.id, song.artists[0].id);
-
-        console.log(
-          "Related content received:",
-          relatedContent?.artists?.length || 0,
-          "artists,",
-          relatedContent?.tracks?.length || 0,
-          "tracks"
-        );
 
         setRelatedArtists(relatedContent?.artists || []);
         setRelatedTracks(relatedContent?.tracks || []);
@@ -130,14 +116,12 @@ export default function Dashboard() {
         setUserStats(stats);
       }
     } catch (error) {
-      console.error("Error fetching related content:", error);
     }
   };
 
   // Update the refreshAccessToken function
   const refreshAccessToken = async () => {
     try {
-      console.log("Attempting to refresh access token...");
 
       // Use a direct fetch without page navigation
       const response = await fetch("/api/auth/refresh", {
@@ -151,14 +135,12 @@ export default function Dashboard() {
 
       // Get the updated token
       const data = await response.json();
-      console.log("Token refreshed successfully");
 
       // Force session update
       await getSession({ force: true });
 
       return data.accessToken;
     } catch (error) {
-      console.error("Error refreshing token:", error);
       return null;
     }
   };
@@ -169,17 +151,14 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching song of the day...");
       const song = await getSongOfTheDay(null, session?.user?.id);
 
       if (!song) {
-        console.error("No song returned from getSongOfTheDay");
         setError("Failed to fetch song recommendation. Please try again later.");
         setLoading(false);
         return;
       }
 
-      console.log("Song found:", song.name, "by", song.artists?.[0]?.name);
       setSongOfTheDay(song);
 
       // Use the extracted helper function
@@ -187,7 +166,6 @@ export default function Dashboard() {
 
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching song of the day:", err);
       setError("Failed to fetch your song recommendation. Please try again later.");
       setLoading(false);
     }
@@ -206,20 +184,16 @@ export default function Dashboard() {
           setRelatedTracks(tracks);
         }
       } catch (error) {
-        console.error("Error in reveal process:", error);
       }
     }
   };
 
   const submitFeedback = async (feedback) => {
     // Implement the logic to submit feedback to the server
-    console.log(`Feedback submitted: ${feedback}`);
   };
 
   const shareSong = (platform) => {
     if (!songOfTheDay) return;
-
-    console.log("Sharing song:", songOfTheDay);
 
     if (platform === "twitter") {
       // Create the tweet text with song info and website reference
@@ -227,7 +201,8 @@ export default function Dashboard() {
       const artistName = songOfTheDay.artists[0].name;
       const songUrl = songOfTheDay.external_urls.spotify;
 
-      const tweetText = `Check out "${songName}" by ${artistName}, my Spotify song of the day! 🎵\n\nListen on Spotify: ${songUrl}\n\nFound via https://spotify-sotd.vercel.app/`;
+      const tweetText = `${songUrl}
+      found this banger via https://spotify-sotd.vercel.app/`;
 
       // Create the Twitter share URL with encoded text
       const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
@@ -240,7 +215,8 @@ export default function Dashboard() {
   const handleCopyLink = () => {
     if (!songOfTheDay) return;
 
-    const shareText = `Check out "${songOfTheDay.name}" by ${songOfTheDay.artists[0].name}, my Spotify song of the day!\n\n🎵 Listen here: ${songOfTheDay.external_urls.spotify}\n\nFound via https://spotify-sotd.vercel.app/`;
+    const shareText = `${songUrl}
+      found this banger via https://spotify-sotd.vercel.app/`;
 
     navigator.clipboard
       .writeText(shareText)
@@ -252,7 +228,6 @@ export default function Dashboard() {
         });
       })
       .catch((err) => {
-        console.error("Failed to copy text: ", err);
         setNotification({
           visible: true,
           message: "Failed to copy link",
@@ -284,11 +259,8 @@ export default function Dashboard() {
 
   // Add a useEffect to handle the revealed state
   useEffect(() => {
-    console.log("Revealed state changed:", revealed);
-
     // If the song was revealed but we don't have data, try fetching again
     if (revealed && !songOfTheDay && !loading && !error) {
-      console.log("Song was revealed but data is missing, fetching again");
       fetchSongOfTheDay();
     }
   }, [revealed, songOfTheDay, loading, error, fetchSongOfTheDay]);
@@ -296,8 +268,6 @@ export default function Dashboard() {
   // Add these functions if they don't exist
   const getRelatedArtists = async (artistId, accessToken) => {
     try {
-      console.log("Fetching artist details for:", artistId);
-
       // First get the artist's details
       const artistResponse = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
         headers: {
@@ -311,7 +281,6 @@ export default function Dashboard() {
       }
 
       const artistData = await artistResponse.json();
-      console.log("Artist data:", artistData);
 
       // Get artists from the same genres
       if (artistData.genres?.length > 0) {
@@ -347,21 +316,17 @@ export default function Dashboard() {
           .sort((a, b) => b.popularity - a.popularity)
           .slice(0, 5);
 
-        console.log("Found similar artists:", similarArtists.length);
         return similarArtists;
       }
 
       return [];
     } catch (error) {
-      console.error("Error in getRelatedArtists:", error);
       return [];
     }
   };
 
   const getRelatedTracks = async (trackId, accessToken) => {
     try {
-      console.log("Fetching related tracks with token:", accessToken?.slice(0, 10) + "...");
-
       // First get the track details to get artist ID
       const trackResponse = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
         headers: {
@@ -398,10 +363,8 @@ export default function Dashboard() {
       // Filter out the current track and get up to 5 tracks
       const relatedTracks = topTracksData.tracks.filter((track) => track.id !== trackId).slice(0, 5);
 
-      console.log("Related tracks response:", relatedTracks);
       return relatedTracks;
     } catch (error) {
-      console.error("Error fetching related tracks:", error);
       return [];
     }
   };
@@ -415,7 +378,6 @@ export default function Dashboard() {
           const tracks = await getRelatedTracks(songOfTheDay.id, session.user.accessToken);
           setRelatedTracks(tracks);
         } catch (error) {
-          console.error("Error fetching related content:", error);
         }
       }
     };

@@ -16,19 +16,16 @@ export default function History() {
   const [creatingPlaylist, setCreatingPlaylist] = useState(false)
   
   useEffect(() => {
-    // Redirect unauthenticated users, but don't do this during the loading state
     if (status === 'unauthenticated') {
       router.push('/')
     }
     
-    // Only fetch song history when we have a confirmed authenticated session
-    if (status === 'authenticated' && session?.user?.id) {
+    if (session?.user?.id) {
       fetchSongHistory()
     }
   }, [session, status, router, selectedMonth, selectedYear])
   
   const fetchSongHistory = async () => {
-    console.log("Fetching song history for user:", session.user.id);
     try {
       setLoading(true)
       
@@ -41,7 +38,7 @@ export default function History() {
       
       setSongHistory(history)
     } catch (error) {
-      console.error('Error fetching song history:', error)
+      console.error('Error fetching song history')
     } finally {
       setLoading(false)
     }
@@ -73,16 +70,14 @@ export default function History() {
 
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      // FIX: Create a date string in YYYY-MM-DD format that doesn't depend on timezone
-      const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const date = new Date(selectedYear, selectedMonth, day)
+      const dateKey = date.toISOString().split('T')[0]
       const song = songHistory[dateKey]
       
       // Check if this is the current day
       const isCurrentDay = day === currentDay && 
                            selectedMonth === currentMonth && 
                            selectedYear === currentYear
-      
-      console.log("Song for day", day, ":", song)
       
       // Check if today's song is unrevealed
       const isUnrevealed = isCurrentDay && !song;

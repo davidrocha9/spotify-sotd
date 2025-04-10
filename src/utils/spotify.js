@@ -54,16 +54,13 @@ export const getTrackFeatures = async (accessToken, trackId) => {
 
 // Enhanced function to determine song of the day with improved variety
 export async function getSongOfTheDay(accessToken, userId) {
-  try {
-    console.log('Generating song of the day for user:', userId)
-    
+  try {   
     // Get user's recent and top tracks
     const recentTracks = await getRecentlyPlayed(accessToken)
     const topTracks = await getTopTracks(accessToken, 'short_term', 20)
     
     // If no tracks found, return null
     if (recentTracks.length === 0 && topTracks.length === 0) {
-      console.log('No tracks found in user history')
       return null
     }
     
@@ -84,7 +81,6 @@ export async function getSongOfTheDay(accessToken, userId) {
         // Get history for current month
         const monthHistory = await getSongHistory(userId, currentMonth, currentYear)
         previouslyRecommended = Object.values(monthHistory).map(song => song.id)
-        console.log(`Found ${previouslyRecommended.length} previously recommended songs this month`)
       } catch (error) {
         console.error('Error fetching song history:', error)
         // Continue with empty array if history fetch fails
@@ -103,7 +99,6 @@ export async function getSongOfTheDay(accessToken, userId) {
       if (sortedTracks.length > 0) {
         const mostPlayedTrackId = sortedTracks[0][0]
         songOfTheDay = recentTracks.find(item => item.track.id === mostPlayedTrackId)?.track
-        console.log("Selected using strategy: Most frequently played track (not previously recommended)")
       }
     }
     
@@ -112,7 +107,6 @@ export async function getSongOfTheDay(accessToken, userId) {
       const newTopTrack = topTracks.find(track => !previouslyRecommended.includes(track.id))
       if (newTopTrack) {
         songOfTheDay = newTopTrack
-        console.log("Selected using strategy: Top favorite track (not previously recommended)")
       }
     }
     
@@ -123,7 +117,6 @@ export async function getSongOfTheDay(accessToken, userId) {
         
       if (mostPlayedTrackId) {
         songOfTheDay = recentTracks.find(item => item.track.id === mostPlayedTrackId)?.track
-        console.log("Selected using strategy: Most frequently played track (allowing repeats)")
       }
     }
     
@@ -137,7 +130,6 @@ export async function getSongOfTheDay(accessToken, userId) {
       
       if (newRecommendation) {
         songOfTheDay = newRecommendation
-        console.log("Selected using strategy: Recommendation based on recent tracks")
       }
     }
     
@@ -278,7 +270,6 @@ export const getRelatedContent = async (accessToken, trackId, artistId) => {
       })
     }
     
-    console.log(`Found ${uniqueArtists.length} related artists and ${uniqueTracks.length} related tracks`)
     return {
       artists: uniqueArtists.slice(0, 6), // Limit to 6 artists
       tracks: uniqueTracks.slice(0, 6)    // Limit to 6 tracks

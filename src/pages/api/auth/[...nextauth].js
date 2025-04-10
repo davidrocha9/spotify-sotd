@@ -27,12 +27,8 @@ export default NextAuth({
   ],
   callbacks: {
     async jwt({ token, account, user }) {
-      console.log("JWT callback", token, account, user);
-
       // Initial sign in
       if (account && user) {
-        console.log("Initial sign in, setting token expiry");
-
         // Create or get user from Supabase
         let supabaseUser = null;
         try {
@@ -61,17 +57,13 @@ export default NextAuth({
 
       // Return previous token if the access token has not expired yet
       if (Date.now() < token.expiresAt * 1000) {
-        console.log("Token still valid, returning existing token");
         return token;
       }
 
       // Access token has expired, try to refresh it
-      console.log("Token expired in jwt callback, refreshing...");
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
-      console.log("Session in jwt callback", session, token);
-
       // Add the user ID and tokens to the session
       session.user.id = token.supabaseUserId; // Use Supabase UUID if available
       session.user.spotifyId = token.id; // Keep the Spotify ID separately
@@ -110,8 +102,6 @@ async function refreshAccessToken(token) {
       console.error("Token refresh failed:", refreshedTokens);
       throw refreshedTokens
     }
-
-    console.log("Token refreshed successfully in NextAuth");
 
     return {
       ...token,

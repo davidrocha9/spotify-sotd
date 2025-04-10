@@ -20,11 +20,9 @@ export default function TopSongs() {
 
   useEffect(() => {
     const fetchSongs = async () => {
-      console.log("fetching songs", status , session)
       if (status === 'authenticated' && session?.user?.accessToken) {
         setIsLoading(true);
         try {
-          console.log("fetching songs")
           const data = await getTopItems('tracks', timeRange, session?.user?.accessToken);
           setSongs(data.items || []);
         } catch (error) {
