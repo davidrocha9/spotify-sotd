@@ -16,13 +16,13 @@ export default function History() {
   const [creatingPlaylist, setCreatingPlaylist] = useState(false)
   
   useEffect(() => {
+    // Redirect unauthenticated users, but don't do this during the loading state
     if (status === 'unauthenticated') {
       router.push('/')
     }
     
-    console.log(session);
-
-    if (session?.user?.id) {
+    // Only fetch song history when we have a confirmed authenticated session
+    if (status === 'authenticated' && session?.user?.id) {
       fetchSongHistory()
     }
   }, [session, status, router, selectedMonth, selectedYear])
@@ -149,7 +149,7 @@ export default function History() {
     setSelectedYear(newYear)
   }
   
-  if (status === 'loading') {
+  if (status === 'loading' || status === 'unauthenticated') {
     return <div className={styles.loadingScreen}><div className={styles.loader}></div></div>
   }
   
